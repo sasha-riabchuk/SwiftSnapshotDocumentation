@@ -1,47 +1,54 @@
-# SwiftSnapshotDocumentation
+# Swift Snapshot Documentation
 
-📸 Generate beautiful DocC documentation from your SwiftUI screens with automatic snapshot testing across devices and themes.
+[![CI](https://img.shields.io/github/actions/workflow/status/yourusername/SwiftSnapshotDocumentation/ci.yml?branch=main)](https://github.com/yourusername/SwiftSnapshotDocumentation/actions)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fyourusername%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fyourusername%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation)
+[![License](https://img.shields.io/github/license/yourusername/SwiftSnapshotDocumentation)](https://github.com/yourusername/SwiftSnapshotDocumentation/blob/main/LICENSE)
 
-## Overview
+A library for generating beautiful DocC documentation from your SwiftUI screens with automatic snapshot testing across devices and themes.
 
-SwiftSnapshotDocumentation combines the power of [PointFree's swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) with Apple's DocC to create comprehensive visual documentation for your iOS apps. Perfect for:
+* [What is Swift Snapshot Documentation?](#what-is-swift-snapshot-documentation)
+* [Examples](#examples)
+* [Basic Usage](#basic-usage)
+* [Documentation](#documentation)
+* [Installation](#installation)
+* [Requirements](#requirements)
+* [Community](#community)
+* [License](#license)
 
-- **Design Systems** - Document UI components across themes and devices
-- **User Flows** - Visualize complete user journeys with screenshots
-- **Code Reviews** - Share visual context without running the app
-- **QA/Testing** - Maintain visual regression test coverage
-- **Onboarding** - Help new developers understand the app's UI
+## What is Swift Snapshot Documentation?
 
-## Features
+Swift Snapshot Documentation combines the power of [PointFree's swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) with Apple's DocC to solve several key challenges when building and maintaining iOS applications:
 
-✅ **Multiple Devices** - iPhone SE, 15 Pro, 15 Pro Max, iPad Pro 11", 12.9"
-✅ **Theme Support** - Automatic light and dark mode screenshots
-✅ **DocC Integration** - Native Xcode documentation viewer support
-✅ **PointFree Powered** - Built on battle-tested snapshot-testing library
-✅ **Flow-Based** - Document complete user journeys, not just screens
-✅ **Rich Documentation** - Markdown, callouts, cross-references
-✅ **CI/CD Ready** - Detect visual regressions in your pipeline
+* **Visual Documentation**: Automatically generate comprehensive visual documentation of your UI screens across multiple devices and themes, integrated directly into Xcode's documentation viewer.
 
-## Installation
+* **Design System Maintenance**: Document and validate UI components across light and dark modes, different device sizes, and various states, ensuring consistency throughout your application.
 
-### Swift Package Manager
+* **Visual Regression Testing**: Leverage snapshot testing to detect unintended UI changes in your CI/CD pipeline, combining documentation generation with test coverage.
 
-Add to your `Package.swift`:
+* **Team Communication**: Share visual context of user flows and screens without requiring team members to build and run the app, improving code reviews and cross-functional collaboration.
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/yourusername/SwiftSnapshotDocumentation", from: "1.0.0")
-]
+* **Developer Onboarding**: Help new team members understand the application's UI structure and user flows through automatically generated, always-up-to-date visual documentation.
+
+## Examples
+
+This repo comes with a comprehensive example demonstrating the library's capabilities:
+
+* [**Example Flow**](Tests/ExampleFlowDocumentationTests/): A complete onboarding flow documentation including welcome screens, login forms, and profile states across multiple devices and themes.
+
+Run the example to see the generated DocC catalog:
+
+```sh
+cd SwiftSnapshotDocumentation
+swift test --filter ExampleFlowDocumentationTests
+open ExampleFlow.docc  # View in Xcode
 ```
 
-Or in Xcode:
-1. File → Add Package Dependencies
-2. Enter repository URL
-3. Add to your test target
+## Basic Usage
 
-## Quick Start
+### Creating Documentation Tests
 
-### 1. Create a Documentation Test
+To document a feature or user flow, create a test case that defines the screens and generates the DocC catalog:
 
 ```swift
 import XCTest
@@ -50,23 +57,26 @@ import SwiftSnapshotDocumentation
 
 @MainActor
 final class OnboardingFlowDocumentation: XCTestCase {
-
     override func setUp() {
         super.setUp()
-        isRecording = true  // Generate snapshots
+        isRecording = true  // Set to true to generate/update snapshots
     }
 
     func testGenerateOnboardingDocs() async throws {
+        // Define the flow
         let flow = DocumentedFlow(
             name: "Onboarding",
             summary: "New user onboarding experience",
-            overview: "Complete onboarding flow from welcome to dashboard."
+            overview: """
+            Complete onboarding flow from welcome screen to authenticated dashboard.
+            This flow introduces new users to the app and guides them through account creation.
+            """
         )
 
         // Document each screen
         await flow.addScreen(
             title: "Welcome Screen",
-            description: "App introduction",
+            description: "Initial app introduction with key features",
             view: { WelcomeView() },
             devices: [.iPhone15Pro, .iPadPro129],
             themes: [.light, .dark]
@@ -74,121 +84,85 @@ final class OnboardingFlowDocumentation: XCTestCase {
 
         await flow.addScreen(
             title: "Login Screen",
-            description: "User authentication",
+            description: "User authentication interface",
             view: { LoginView() },
             devices: [.iPhone15Pro],
             themes: [.light, .dark],
             callouts: [
-                .init(type: .important, content: "Supports biometric authentication")
+                .init(type: .important, content: "Supports biometric authentication via Face ID and Touch ID")
             ]
         )
 
-        // Generate DocC catalog
+        // Generate the DocC catalog
         try await flow.generateDocumentation(
-            outputPath: "Sources/YourModule/Documentation.docc"
+            outputPath: "Documentation.docc"
         )
     }
 }
 ```
 
-### 2. Run the Test
+Run the test to generate documentation:
 
-```bash
-# Generate/update snapshots
-swift test
-
-# The test will create:
-# - Documentation.docc/ (DocC catalog)
-# - __Snapshots__/ (snapshot images)
+```sh
+swift test --filter OnboardingFlowDocumentation
 ```
 
-### 3. View Documentation
+This creates:
+- `Documentation.docc/` - DocC catalog with articles for each screen
+- `__Snapshots__/` - Snapshot images referenced in the documentation
 
-**In Xcode:**
-- Open `Documentation.docc` in Xcode
-- Product → Build Documentation (⌃⇧⌘D)
-- View in Documentation Viewer
+View the documentation in Xcode by opening `Documentation.docc` or building documentation with Product → Build Documentation (⌃⇧⌘D).
 
-**Or build manually:**
-```bash
-xcodebuild docbuild \
-  -scheme YourScheme \
-  -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
-```
+### Documenting Multiple View States
 
-## API Reference
-
-### DocumentedFlow
-
-The main container for your documentation:
+Document different states of the same screen by adding multiple screen entries:
 
 ```swift
-let flow = DocumentedFlow(
-    name: "Feature Name",
-    summary: "Brief description",
-    overview: """
-    Extended Markdown overview with:
-    - Lists
-    - **Bold** and *italic*
-    - Code blocks
-    - Links
-    """
-)
-```
-
-### Adding Screens
-
-```swift
+// Empty state
 await flow.addScreen(
-    title: "Screen Title",
-    description: "Brief description",
-    discussion: "Optional extended discussion in Markdown",
-    view: { YourSwiftUIView() },
-    devices: [.iPhone15Pro, .iPadPro129],
-    themes: [.light, .dark],
-    callouts: [
-        .init(type: .note, content: "Additional info"),
-        .init(type: .important, content: "Critical detail"),
-        .init(type: .warning, content: "Potential issue"),
-        .init(type: .tip, content: "Helpful suggestion")
-    ]
+    title: "Profile - Empty",
+    description: "Initial empty state before user input",
+    view: { ProfileView(data: nil) },
+    devices: [.iPhone15Pro],
+    themes: [.light, .dark]
+)
+
+// Filled state
+await flow.addScreen(
+    title: "Profile - Filled",
+    description: "Form populated with user data",
+    view: { ProfileView(data: mockUserData) },
+    devices: [.iPhone15Pro],
+    themes: [.light, .dark]
 )
 ```
 
-### Device Configurations
+### Available Devices and Themes
 
 ```swift
 // Individual devices
-.iPhoneSE
-.iPhone15Pro
-.iPhone15ProMax
-.iPadPro11
-.iPadPro129
+.iPhoneSE, .iPhone15Pro, .iPhone15ProMax, .iPadPro11, .iPadPro129
 
-// Collections
+// Device groups
 .allIPhones  // All iPhone sizes
 .allIPads    // All iPad sizes
-.allDevices  // Everything
-```
+.allDevices  // All supported devices
 
-### Theme Configurations
-
-```swift
-.light       // Light mode
-.dark        // Dark mode
-.allThemes   // Both light and dark
+// Themes
+.light, .dark, .allThemes
 ```
 
 ### Documentation Configuration
 
+Customize the generated documentation with `DocumentationConfiguration`:
+
 ```swift
 let config = DocumentationConfiguration(
-    imageFormat: .png,              // or .jpeg
-    deviceFrames: true,             // Include device bezels
+    imageFormat: .png,              // Image format (.png or .jpeg)
+    deviceFrames: true,             // Include device bezels in screenshots
     perPixelTolerance: 0.01,        // Snapshot comparison tolerance
     overallTolerance: 0.05,
-    createIndexPage: true,          // Generate main page
-    includeFlowDiagram: false,      // Future: Mermaid diagrams
+    createIndexPage: true,          // Generate index page
     organizeByDevice: false         // Group images by device
 )
 
@@ -198,145 +172,77 @@ try await flow.generateDocumentation(
 )
 ```
 
-## Example Output
+## Documentation
 
-The generated DocC catalog includes:
+The documentation for releases and `main` are available here:
 
-```
-Documentation.docc/
-├── YourFlow.md                     # Main catalog file
-├── 01-welcome-screen.md            # Screen articles
-├── 02-login-screen.md
-├── 03-profile-form.md
-└── Resources/
-    └── Snapshots/
-        ├── 01-welcome-screen-iphone15pro-light.png
-        ├── 01-welcome-screen-iphone15pro-dark.png
-        ├── 01-welcome-screen-ipadpro129-light.png
-        └── ...
-```
+* [Swift Snapshot Documentation](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation/documentation)
 
-Each article shows:
-- Side-by-side light/dark mode comparison
-- Multiple device sizes
-- Rich Markdown documentation
-- Callouts and notes
-- Navigation between screens
+<details>
+  <summary>Other documentation</summary>
 
-## Advanced Usage
+* Generated DocC catalogs integrate seamlessly with Xcode's documentation viewer
+* Each screen generates a dedicated article with device and theme comparisons
+* Supports DocC callouts (note, important, warning, tip) for additional context
+* Full Markdown support in overview and discussion sections
+</details>
 
-### Multiple States
+## Installation
 
-Document different view states:
+You can add Swift Snapshot Documentation to an Xcode project by adding it as a package dependency:
+
+1. From the **File** menu, select **Add Package Dependencies...**
+2. Enter "https://github.com/yourusername/SwiftSnapshotDocumentation" into the package repository URL text field
+3. Add the package to your test target
+
+### Swift Package Manager
+
+Add the package as a dependency in your `Package.swift` file:
 
 ```swift
-// Empty state
-await flow.addScreen(
-    title: "Profile - Empty",
-    description: "No data entered",
-    view: { ProfileView(data: nil) },
-    devices: [.iPhone15Pro],
-    themes: [.light]
-)
-
-// Filled state
-await flow.addScreen(
-    title: "Profile - Filled",
-    description: "With user data",
-    view: { ProfileView(data: mockData) },
-    devices: [.iPhone15Pro],
-    themes: [.light]
-)
-
-// Loading state
-await flow.addScreen(
-    title: "Profile - Loading",
-    description: "Saving data",
-    view: { ProfileView(data: mockData, isLoading: true) },
-    devices: [.iPhone15Pro],
-    themes: [.light]
-)
+dependencies: [
+    .package(
+        url: "https://github.com/yourusername/SwiftSnapshotDocumentation",
+        from: "1.0.0"
+    )
+]
 ```
 
-### CI/CD Integration
+Then add it as a dependency of your test target:
 
-```yaml
-# .github/workflows/documentation.yml
-name: Generate Documentation
-
-on: [pull_request]
-
-jobs:
-  docs:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Generate Documentation
-        run: |
-          swift test --filter DocumentationTests
-
-      - name: Check for Visual Regressions
-        run: |
-          # Set isRecording = false to verify snapshots
-          # Test will fail if UI changed
-          swift test --filter DocumentationTests
-
-      - name: Upload Documentation
-        uses: actions/upload-artifact@v3
-        with:
-          name: documentation
-          path: '**/*.docc'
-```
-
-## Example Project
-
-See `Tests/ExampleFlowDocumentationTests/` for a complete working example with:
-- Welcome screen
-- Login form
-- Profile form (empty, filled, loading states)
-- Complete DocC documentation
-
-Run the example:
-
-```bash
-cd SwiftSnapshotDocumentation
-swift test --filter ExampleFlowDocumentationTests
-open ExampleFlow.docc  # View in Xcode
+```swift
+.testTarget(
+    name: "YourAppTests",
+    dependencies: [
+        .product(name: "SwiftSnapshotDocumentation", package: "SwiftSnapshotDocumentation")
+    ]
+)
 ```
 
 ## Requirements
 
-- iOS 17.0+ / macOS 14.0+
-- Swift 5.9+
-- Xcode 15.0+
+* iOS 17.0+ / macOS 14.0+
+* Swift 5.9+
+* Xcode 15.0+
 
-## Dependencies
+## Other Libraries
 
-- [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) 1.15.0+
+Swift Snapshot Documentation depends on:
 
-## Contributing
+* [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) 1.15.0+
 
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+## Community
+
+For discussions, questions, and announcements:
+
+* **GitHub Discussions**: [Discussions](https://github.com/yourusername/SwiftSnapshotDocumentation/discussions)
+* **Issue Tracker**: [Report bugs or request features](https://github.com/yourusername/SwiftSnapshotDocumentation/issues)
 
 ## License
 
-MIT License - see LICENSE file for details
+This library is released under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [PointFree](https://www.pointfree.co/) for swift-snapshot-testing
-- Apple for DocC
-- The Swift community
-
-## Support
-
-- 📖 [Documentation](./Documentation)
-- 🐛 [Issues](https://github.com/yourusername/SwiftSnapshotDocumentation/issues)
-- 💬 [Discussions](https://github.com/yourusername/SwiftSnapshotDocumentation/discussions)
-
----
+* [PointFree](https://www.pointfree.co/) for swift-snapshot-testing
+* Apple for DocC and the Swift ecosystem

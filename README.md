@@ -8,6 +8,7 @@
 A library for generating beautiful DocC documentation from your SwiftUI screens with automatic snapshot testing across devices and themes.
 
 * [What is Swift Snapshot Documentation?](#what-is-swift-snapshot-documentation)
+* [Example Output](#example-output)
 * [Examples](#examples)
 * [Basic Usage](#basic-usage)
 * [Documentation](#documentation)
@@ -29,6 +30,57 @@ Swift Snapshot Documentation combines the power of [PointFree's swift-snapshot-t
 * **Team Communication**: Share visual context of user flows and screens without requiring team members to build and run the app, improving code reviews and cross-functional collaboration.
 
 * **Developer Onboarding**: Help new team members understand the application's UI structure and user flows through automatically generated, always-up-to-date visual documentation.
+
+## Example Output
+
+The library generates DocC catalogs that integrate seamlessly with Xcode's documentation viewer. Here's what the generated documentation looks like:
+
+### Generated DocC Catalog Structure
+
+```
+Documentation.docc/
+├── OnboardingFlow.md                    # Main flow article
+├── 01-welcome-screen.md                 # Individual screen articles
+├── 02-login-screen.md
+├── 03-profile-form.md
+└── Resources/
+    └── Snapshots/
+        ├── 01-welcome-screen-iphone15pro-light.png
+        ├── 01-welcome-screen-iphone15pro-dark.png
+        ├── 01-welcome-screen-ipadpro129-light.png
+        ├── 01-welcome-screen-ipadpro129-dark.png
+        ├── 02-login-screen-iphone15pro-light.png
+        └── ...
+```
+
+### Documentation Viewer
+
+Each screen article includes:
+
+* **Side-by-side theme comparison**: Light and dark mode screenshots displayed together
+* **Multiple device sizes**: iPhone SE, iPhone 15 Pro, iPhone 15 Pro Max, iPad Pro 11", iPad Pro 12.9"
+* **Rich documentation**: Full Markdown support with headings, lists, code blocks, and links
+* **DocC callouts**: Note, Important, Warning, and Tip callouts for additional context
+* **Navigation**: Links between screens to show user flow progression
+
+### Example Screenshots
+
+<div align="center">
+  <img src="Documentation/Images/xcode-docc-viewer.png" alt="DocC Viewer in Xcode" width="800">
+  <p><em>Documentation integrated in Xcode's Documentation Viewer</em></p>
+</div>
+
+<div align="center">
+  <img src="Documentation/Images/side-by-side-comparison.png" alt="Light and Dark Mode Comparison" width="800">
+  <p><em>Automatic side-by-side light/dark mode comparison</em></p>
+</div>
+
+<div align="center">
+  <img src="Documentation/Images/multiple-devices.png" alt="Multiple Device Sizes" width="800">
+  <p><em>Screenshots across different device sizes</em></p>
+</div>
+
+> **Note**: Add your own screenshots to the `Documentation/Images/` directory to showcase your library's capabilities.
 
 ## Examples
 

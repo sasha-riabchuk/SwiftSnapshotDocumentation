@@ -27,6 +27,9 @@ let package = Package(
             name: "SwiftSnapshotDocumentation",
             dependencies: [
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            resources: [
+                .copy("Resources/FlowExplorerAssets")
             ]
         ),
 

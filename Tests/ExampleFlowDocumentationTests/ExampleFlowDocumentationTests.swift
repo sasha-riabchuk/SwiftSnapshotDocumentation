@@ -100,7 +100,8 @@ final class ExampleFlowDocumentationTests: XCTestCase {
                     type: .tip,
                     content: "The gradient adapts to light/dark mode automatically"
                 )
-            ]
+            ],
+            transitions: [.to("Login Screen")]
         )
 
         // MARK: - Step 2: Login Screen
@@ -138,7 +139,8 @@ final class ExampleFlowDocumentationTests: XCTestCase {
                     type: .note,
                     content: "The forgot password link opens a password reset flow"
                 )
-            ]
+            ],
+            transitions: [.to("Profile Form - Empty", on: "new user")]
         )
 
         // MARK: - Step 3: Profile Form - Empty State
@@ -246,6 +248,9 @@ final class ExampleFlowDocumentationTests: XCTestCase {
                 includeFlowDiagram: false
             )
         )
+
+        let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
+        print("🗂  Flow Explorer: \(exported.screenCount) screens, \(exported.edgeCount) edges at \(exported.featurePath)")
 
         print("\n✅ Documentation generation complete!")
         print("📖 View documentation:")

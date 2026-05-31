@@ -59,3 +59,13 @@ private func screenStub(_ title: String, _ transitions: [ScreenTransition] = [])
     #expect(result.edges.isEmpty)
     #expect(result.unresolved == ["Login → Nowhere"])
 }
+
+@Test func edgeResolverResolvesTargetBySanitizedTitle() {
+    let screens = [
+        DocumentedScreen(title: "Home", description: "d", devices: [], themes: [], transitions: [.to("sign-up")]),
+        DocumentedScreen(id: "custom", title: "Sign Up", description: "d", devices: [], themes: []),
+    ]
+    let result = FlowEdgeResolver.resolve(screens: screens)
+    #expect(result.edges == [.init(from: "home", to: "custom", label: nil)])
+    #expect(result.unresolved.isEmpty)
+}

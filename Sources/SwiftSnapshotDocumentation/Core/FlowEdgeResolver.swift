@@ -50,13 +50,14 @@ enum FlowEdgeResolver {
         return Result(edges: edges, unresolved: unresolved)
     }
 
-    /// Maps both the lowercased title and the id to the screen's id, for flexible
-    /// target matching.
+    /// Maps the id, the lowercased title, and the sanitized title to the screen's id,
+    /// for flexible target matching. If two screens share a title, the later one wins.
     private static func screenLookup(_ screens: [DocumentedScreen]) -> [String: String] {
         var map: [String: String] = [:]
         for screen in screens {
             map[screen.id] = screen.id
             map[screen.title.lowercased()] = screen.id
+            map[screen.title.sanitizedForFilename()] = screen.id
         }
         return map
     }

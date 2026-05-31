@@ -137,11 +137,35 @@ transition for a fully connected graph.
 For multiple features, export each into the same directory, then call
 `FlowExplorer.rebuildManifest(at: "FlowExplorer")` once to finalize the shared index.
 
+## Snapshotting gotchas (read before building screens to document)
+
+`assertSnapshot` renders the SwiftUI **view tree, offscreen**. Two consequences trip
+people up constantly:
+
+1. **Native overlays don't appear.** `.alert`, `.sheet`, `.fullScreenCover`, `.popover`,
+   `.confirmationDialog`, and `Menu` present in a **separate window** — a snapshot of the
+   view shows only the screen behind them. To document such a state, **render the presented
+   appearance inline** (a dimmed `ZStack` containing the alert card / sheet / popover built
+   in the view tree). `TabView` and `NavigationStack` *are* in the tree, so use them for real.
+
+2. **Blur materials render transparent.** `.regularMaterial` / `.ultraThinMaterial` /
+   `.thinMaterial` come out see-through in offscreen snapshots, so cards built on them
+   vanish and text overlaps the content behind. Use a **solid color** instead — e.g.
+   `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) reads as a native
+   elevated card and renders correctly.
+
+## Adding a screen to an existing, already-recorded flow
+
+Set the flow's `record:` to **`.recordMissing`** for that run: it records only the new
+screen's snapshots and verifies the rest (so it won't disturb committed baselines). Then
+commit the new `__Snapshots__` PNGs and switch back to `.verify`.
+
 ## Pitfalls
 
 - Adding the package to the app target instead of the test target.
 - Running `swift test` on macOS (won't build/capture) instead of `xcodebuild` on a sim.
-- Calling `generateDocumentation` without `addScreen` having captured in the same test.
+- Calling `generateDocumentation` / `exportFlowExplorer` without `addScreen` having captured
+  in the same test.
 - Expecting `.verify` to pass before any baseline has been recorded and committed.
 - Snapshot baselines are environment-specific (Xcode/simulator/OS); diffs across
   machines are expected — pin the toolchain or re-record.

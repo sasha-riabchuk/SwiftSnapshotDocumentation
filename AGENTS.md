@@ -135,6 +135,11 @@ xcodebuild test \
 | Package won't build in the app target | Added to the wrong target | Add it to the **test** target only |
 | Docs have broken image links | Capture didn't run (e.g. macOS) | Capture on iOS; generation **throws** if zero images — read the error, it names the fix |
 | Flow Explorer page is blank / `flows.js` fails to load over `file://` | Expecting a server | Data is emitted as JS globals, so double-clicking `index.html` works; any static server is also fine |
+| A screen presenting `.alert` / `.sheet` / `.fullScreenCover` / `.popover` / `.confirmationDialog` / `Menu` snapshots as the empty screen behind it | Native presentations live in a **separate UIKit window** the view-snapshot can't see | Render the **presented appearance inline** (a dimmed `ZStack` with the alert card / sheet / popover drawn in the view tree). `TabView` / `NavigationStack` *are* in the tree and snapshot fine. |
+| A card/overlay built with `.regularMaterial` / `.ultraThinMaterial` is **transparent** in the snapshot (content bleeds through) | Blur **materials don't render** in offscreen snapshots | Use a solid color instead, e.g. `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) — renders correctly and still reads as a native elevated card |
+| Adding a new screen makes the whole `.verify` test fail / re-records every snapshot | `.record` overwrites everything; `.verify` fails on the missing one | Use `record: .recordMissing` (records only the new screens, verifies the rest), then commit the new `__Snapshots__` PNGs |
+| New `addScreen` is an orphan node in the explorer | Once *any* screen declares `transitions:`, linear fallback is off flow-wide | Give the new screen (and/or its neighbors) a `transitions:` edge, or leave it intentionally disconnected |
+| Flow Explorer nodes look blurry / squished for iPad | (fixed in 1.2.0) | Update to ≥1.2.0 — nodes size to the real aspect ratio and thumbnails are high-res JPEG |
 
 ## Notes for agents
 

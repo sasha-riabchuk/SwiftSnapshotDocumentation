@@ -257,4 +257,48 @@ final class ExampleFlowDocumentationTests: XCTestCase {
         print("   1. Open ExampleFlow.docc in Xcode")
         print("   2. Or build with: xcodebuild docbuild -scheme SwiftSnapshotDocumentation")
     }
+
+    /// A gallery of native iOS components, exported as a second feature into the same
+    /// Flow Explorer bundle (so the explorer sidebar lists both features).
+    func testGenerateIOSComponentsFlow() async throws {
+        let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
+
+        let flow = DocumentedFlow(
+            name: "iOS Components",
+            summary: "Native iOS UI components, rendered for documentation",
+            overview: """
+            A reference gallery of common native iOS components. Overlay components
+            (alert, action sheet, sheets, popover, toast) are rendered inline as their
+            presented appearance, since native presentations live in a separate window
+            and aren't captured by view snapshots. Tab bar and navigation bar use the
+            real `TabView` / `NavigationStack`.
+            """,
+            record: isRecording ? .record : .verify
+        )
+
+        let devices: [DeviceConfiguration] = [.iPhone15Pro]
+        let themes: [ThemeConfiguration] = [.light, .dark]
+
+        await flow.addScreen(title: "Alert", description: "A modal alert (UIAlertController) with destructive action",
+                             view: { AlertComponentView() }, devices: devices, themes: themes,
+                             callouts: [.init(type: .note, content: "Rendered inline — native `.alert` presents in a separate window")])
+        await flow.addScreen(title: "Action Sheet", description: "A confirmation dialog anchored to the bottom",
+                             view: { ActionSheetComponentView() }, devices: devices, themes: themes)
+        await flow.addScreen(title: "Half Sheet", description: "A sheet at the medium detent with a grabber",
+                             view: { HalfSheetComponentView() }, devices: devices, themes: themes)
+        await flow.addScreen(title: "Full Screen Cover", description: "A full-screen modal with Cancel / Send",
+                             view: { FullScreenCoverComponentView() }, devices: devices, themes: themes)
+        await flow.addScreen(title: "Popover", description: "A popover menu attached to a source view",
+                             view: { PopoverComponentView() }, devices: devices, themes: themes)
+        await flow.addScreen(title: "Tab Bar", description: "A real TabView with a bottom tab bar",
+                             view: { TabBarComponentView() }, devices: devices, themes: themes,
+                             callouts: [.init(type: .tip, content: "Uses a real `TabView` — it's part of the view tree, so it snapshots directly")])
+        await flow.addScreen(title: "Navigation Bar", description: "A NavigationStack with a large title and toolbar",
+                             view: { NavBarComponentView() }, devices: devices, themes: themes)
+        await flow.addScreen(title: "Toast", description: "A transient banner / toast notification",
+                             view: { ToastComponentView() }, devices: devices, themes: themes)
+
+        let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
+        print("🗂  iOS Components: \(exported.screenCount) screens at \(exported.featurePath)")
+    }
 }

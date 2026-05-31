@@ -48,7 +48,6 @@ private func welcomeScreen() -> DocumentedScreen {
     DocumentedScreen(
         title: "Welcome",
         description: "Landing screen",
-        viewBuilder: { Text("Welcome") },
         devices: [makeDevice("iPhone15Pro")],
         themes: [.light, .dark]
     )
@@ -58,7 +57,6 @@ private func screen(_ title: String) -> DocumentedScreen {
     DocumentedScreen(
         title: title,
         description: "\(title) description",
-        viewBuilder: { Text(title) },
         devices: [makeDevice("iPhone15Pro")],
         themes: [.light]
     )

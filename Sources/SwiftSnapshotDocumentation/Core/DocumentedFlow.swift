@@ -155,7 +155,6 @@ public final class DocumentedFlow {
             title: title,
             description: description,
             discussion: discussion,
-            viewBuilder: viewBuilder,
             devices: devices,
             themes: themes,
             callouts: callouts
@@ -170,11 +169,13 @@ public final class DocumentedFlow {
             resolvedSnapshotDirectory = Self.snapshotDirectory(forFile: file)
         }
 
-        // Capture snapshots for all device/theme combinations
+        // Capture snapshots for all device/theme combinations. The view builder is
+        // used here and not retained on the screen.
         for device in devices {
             for theme in themes {
                 await captureSnapshot(
                     screen: screen,
+                    viewBuilder: viewBuilder,
                     device: device,
                     theme: theme,
                     file: file,
@@ -189,6 +190,7 @@ public final class DocumentedFlow {
     ///
     /// - Parameters:
     ///   - screen: The screen to capture
+    ///   - viewBuilder: Closure that builds the view (used here, not retained)
     ///   - device: The device configuration
     ///   - theme: The theme configuration
     ///   - file: Source file location
@@ -196,6 +198,7 @@ public final class DocumentedFlow {
     ///   - line: Source line number
     private func captureSnapshot(
         screen: DocumentedScreen,
+        viewBuilder: () -> any View,
         device: DeviceConfiguration,
         theme: ThemeConfiguration,
         file: StaticString,
@@ -203,7 +206,7 @@ public final class DocumentedFlow {
         line: UInt
     ) async {
         #if os(iOS)
-        let view = AnyView(screen.viewBuilder())
+        let view = AnyView(viewBuilder())
             .preferredColorScheme(theme.colorScheme)
 
         let screenIndex = screens.count

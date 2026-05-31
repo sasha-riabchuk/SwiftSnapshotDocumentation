@@ -5,7 +5,7 @@
 //  Created by Sasha Riabchuk on 09.12.2025.
 //
 
-import SwiftUI
+import Foundation
 
 /// Represents a single screen in a documented user flow.
 ///
@@ -37,7 +37,12 @@ import SwiftUI
 ///
 /// - SeeAlso: ``DocumentedFlow``
 /// - SeeAlso: ``Callout``
-public struct DocumentedScreen {
+/// This type only describes a screen; it does not hold the SwiftUI view. The view
+/// is supplied to ``DocumentedFlow/addScreen(title:description:discussion:view:devices:themes:callouts:file:testName:line:)``
+/// and consumed immediately during snapshot capture, so the long-lived screen value
+/// stays a plain, `Sendable` metadata record rather than retaining a closure (and
+/// whatever state it captures) for the lifetime of the flow.
+public struct DocumentedScreen: Sendable {
     /// Unique identifier for this screen (derived from title if not provided).
     public let id: String
 
@@ -52,9 +57,6 @@ public struct DocumentedScreen {
     /// This content appears in the generated DocC article's "Discussion" section.
     /// Supports full Markdown syntax including headers, lists, code blocks, etc.
     public let discussion: String?
-
-    /// The SwiftUI view builder that creates the view to be documented.
-    public let viewBuilder: () -> any View
 
     /// The devices on which to capture this screen.
     public let devices: [DeviceConfiguration]
@@ -72,7 +74,6 @@ public struct DocumentedScreen {
     ///   - title: The screen's display title
     ///   - description: Brief one-line description
     ///   - discussion: Optional extended Markdown discussion
-    ///   - viewBuilder: Closure that builds the view
     ///   - devices: Devices to capture
     ///   - themes: Themes to capture
     ///   - callouts: Optional documentation callouts
@@ -81,7 +82,6 @@ public struct DocumentedScreen {
         title: String,
         description: String,
         discussion: String? = nil,
-        viewBuilder: @escaping () -> any View,
         devices: [DeviceConfiguration],
         themes: [ThemeConfiguration],
         callouts: [Callout] = []
@@ -90,7 +90,6 @@ public struct DocumentedScreen {
         self.title = title
         self.description = description
         self.discussion = discussion
-        self.viewBuilder = viewBuilder
         self.devices = devices
         self.themes = themes
         self.callouts = callouts
@@ -109,9 +108,9 @@ public struct DocumentedScreen {
     ///     content: "This action cannot be undone"
     /// )
     /// ```
-    public struct Callout {
+    public struct Callout: Sendable {
         /// The type of callout, which determines its visual styling.
-        public enum CalloutType: String {
+        public enum CalloutType: String, Sendable {
             /// Informational note (blue styling).
             case note = "Note"
 

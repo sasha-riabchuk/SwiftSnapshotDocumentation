@@ -164,6 +164,29 @@ private func fxDevice(_ name: String) -> DeviceConfiguration {
 }
 
 @MainActor
+@Test func exporterRefreshesStaleAssets() throws {
+    let root = try fxTempDir(); defer { try? FileManager.default.removeItem(at: root) }
+    let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
+    try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+    try Data([0x89]).write(to: source.appendingPathComponent("t.01-welcome-iPhone15Pro-light.png"))
+
+    let flow = DocumentedFlow(name: "Onboarding", summary: "s")
+    let screens = [DocumentedScreen(title: "Welcome", description: "d", devices: [fxDevice("iPhone15Pro")], themes: [.light])]
+    let exporter = FlowExplorerExporter(flow: flow, screens: screens, snapshotSourcePath: source.path, configuration: .init(deviceFrames: false))
+    let explorerPath = root.appendingPathComponent("FlowExplorer").path
+    _ = try exporter.export(at: explorerPath)
+
+    // Tamper with the deployed app.js and backdate it so the bundled copy looks newer.
+    let appJS = "\(explorerPath)/app.js"
+    try "STALE".write(toFile: appJS, atomically: true, encoding: .utf8)
+    try FileManager.default.setAttributes([.modificationDate: Date.distantPast], ofItemAtPath: appJS)
+
+    _ = try exporter.export(at: explorerPath)
+    let refreshed = try String(contentsOfFile: appJS, encoding: .utf8)
+    #expect(refreshed != "STALE")
+}
+
+@MainActor
 @Test func rebuildManifestListsFeatureMarkers() throws {
     let root = try fxTempDir(); defer { try? FileManager.default.removeItem(at: root) }
     let explorer = root.appendingPathComponent("FlowExplorer")

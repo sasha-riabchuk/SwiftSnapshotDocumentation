@@ -77,11 +77,20 @@ struct FlowExplorerExporter {
     }
 
     private func copyAssetsIfNeeded(to explorerPath: String, fileManager: FileManager) throws {
-        guard let assets = Bundle.module.url(forResource: "FlowExplorerAssets", withExtension: nil) else { throw DocumentationError.flowExplorerExportFailed(reason: "Could not locate the bundled Flow Explorer web assets (FlowExplorerAssets).") }
+        guard let assets = Bundle.module.url(forResource: "FlowExplorerAssets", withExtension: nil) else {
+            throw DocumentationError.flowExplorerExportFailed(reason: "Could not locate the bundled Flow Explorer web assets (FlowExplorerAssets).")
+        }
         for item in ["index.html", "app.js", "vendor"] {
-            let dest = "\(explorerPath)/\(item)"
-            guard !fileManager.fileExists(atPath: dest) else { continue }
-            try fileManager.copyItem(at: assets.appendingPathComponent(item), to: URL(fileURLWithPath: dest))
+            let src = assets.appendingPathComponent(item)
+            let destURL = URL(fileURLWithPath: "\(explorerPath)/\(item)")
+            if fileManager.fileExists(atPath: destURL.path) {
+                // Refresh only when the bundled copy is newer (e.g. after a library upgrade).
+                let srcDate = (try? src.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date.distantFuture
+                let destDate = (try? destURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date.distantPast
+                guard srcDate > destDate else { continue }
+                try fileManager.removeItem(at: destURL)
+            }
+            try fileManager.copyItem(at: src, to: destURL)
         }
     }
 

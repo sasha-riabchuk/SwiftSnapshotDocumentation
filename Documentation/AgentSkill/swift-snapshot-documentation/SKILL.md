@@ -127,6 +127,9 @@ works with no server required.
 
 If no screen declares `transitions:`, edges follow `addScreen` order (linear). Targets that
 cannot be resolved by title or id are skipped and reported in `ExportedFeature.unresolvedTransitions`.
+When any screen declares `transitions:`, the linear fallback is disabled flow-wide, so screens
+without an incoming or outgoing transition appear as unconnected nodes — give every screen a
+transition for a fully connected graph.
 
 For multiple features, export each into the same directory, then call
 `FlowExplorer.rebuildManifest(at: "FlowExplorer")` once to finalize the shared index.

@@ -202,6 +202,8 @@ try await flow.exportFlowExplorer(at: "FlowExplorer")
 
 Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals so `file://` works with no server required.
 
+Note: when any screen declares `transitions:`, the linear fallback is disabled flow-wide, so screens without an incoming or outgoing transition appear as unconnected nodes — give every screen a transition for a fully connected graph.
+
 To build a multi-feature explorer, call `exportFlowExplorer(at:)` with the same directory from each feature's test, then call `FlowExplorer.rebuildManifest(at: "FlowExplorer")` once after all features have been exported to finalize the shared index.
 
 ### Documenting Multiple View States

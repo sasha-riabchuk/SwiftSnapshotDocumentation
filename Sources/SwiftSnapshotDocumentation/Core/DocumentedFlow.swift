@@ -62,7 +62,7 @@ public final class DocumentedFlow {
     /// Configuration governing snapshot capture and documentation generation.
     ///
     /// The snapshot-comparison tolerances are read at capture time (when
-    /// ``addScreen(title:description:discussion:view:devices:themes:callouts:file:testName:line:)``
+    /// ``addScreen(title:description:discussion:view:devices:themes:callouts:transitions:file:testName:line:)``
     /// runs), which is why this is supplied here rather than only at generation time.
     public let configuration: DocumentationConfiguration
 
@@ -136,6 +136,7 @@ public final class DocumentedFlow {
     ///   - devices: Devices to capture
     ///   - themes: Themes to capture
     ///   - callouts: Optional documentation callouts
+    ///   - transitions: Outgoing transitions to other screens (used by the Flow Explorer)
     ///   - file: Source file (automatic)
     ///   - testName: Test function name (automatic)
     ///   - line: Source line (automatic)
@@ -147,6 +148,7 @@ public final class DocumentedFlow {
         devices: [DeviceConfiguration],
         themes: [ThemeConfiguration],
         callouts: [DocumentedScreen.Callout] = [],
+        transitions: [ScreenTransition] = [],
         file: StaticString = #file,
         testName: String = #function,
         line: UInt = #line
@@ -157,7 +159,8 @@ public final class DocumentedFlow {
             discussion: discussion,
             devices: devices,
             themes: themes,
-            callouts: callouts
+            callouts: callouts,
+            transitions: transitions
         )
 
         screens.append(screen)
@@ -308,6 +311,46 @@ public final class DocumentedFlow {
         }
     }
 
+    /// Exports this flow into a Flow Explorer bundle at `explorerPath`.
+    ///
+    /// Writes `<Name>/{feature.json, flows.js, images/}`, copies the vendored web
+    /// bundle (index.html/app.js/vendor) if absent, and rebuilds `manifest.js`.
+    /// Shares the capture prerequisite of ``generateDocumentation(outputPath:snapshotSourcePath:configuration:)``:
+    /// snapshots must already exist (captured on iOS, or committed baselines).
+    ///
+    /// - Parameters:
+    ///   - explorerPath: Directory where the Flow Explorer bundle is written/updated.
+    ///   - snapshotSourcePath: Optional explicit `__Snapshots__` path (auto-resolved if nil).
+    ///   - configuration: Generation options; defaults to the flow's configuration.
+    /// - Returns: An ``ExportedFeature`` describing what was written.
+    /// - Throws: ``DocumentationError`` if snapshots are missing, or
+    ///   ``DocumentationError/captureUnavailable`` when running off-iOS with no
+    ///   pre-recorded snapshots, or ``DocumentationError/flowExplorerExportFailed(reason:)``
+    ///   if the flow has no screens or the bundled web assets are missing.
+    @discardableResult
+    public func exportFlowExplorer(
+        at explorerPath: String,
+        snapshotSourcePath: String? = nil,
+        configuration: DocumentationConfiguration? = nil
+    ) async throws -> ExportedFeature {
+        let exporter = FlowExplorerExporter(
+            flow: self,
+            screens: screens,
+            snapshotSourcePath: snapshotSourcePath ?? resolvedSnapshotDirectory,
+            configuration: configuration ?? self.configuration
+        )
+        #if os(iOS)
+        let captureSupported = true
+        #else
+        let captureSupported = false
+        #endif
+        do {
+            return try exporter.export(at: explorerPath)
+        } catch let error as DocumentationError {
+            throw Self.mappedGenerationError(error, captureSupported: captureSupported)
+        }
+    }
+
     /// Maps a generic "no snapshots" generation failure to ``DocumentationError/captureUnavailable``
     /// when snapshot capture isn't supported on the current platform.
     ///
@@ -343,5 +386,18 @@ public final class DocumentedFlow {
             .appendingPathComponent("__Snapshots__")
             .appendingPathComponent(fileName)
             .path
+    }
+}
+
+/// Entry points for maintaining a Flow Explorer bundle.
+public enum FlowExplorer {
+    /// Rebuilds `manifest.js` from the `feature.json` markers in `explorerPath`.
+    /// Use once after all documentation tests run to guarantee a complete index.
+    ///
+    /// - Parameter explorerPath: The Flow Explorer bundle directory to reindex.
+    /// - Throws: A file-system error if the directory cannot be read or written.
+    @MainActor
+    public static func rebuildManifest(at explorerPath: String) throws {
+        try FlowExplorerExporter.writeManifest(at: explorerPath, fileManager: .default)
     }
 }

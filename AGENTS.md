@@ -108,6 +108,17 @@ xcodebuild test \
 - **`DocumentationConfiguration(imageFormat:deviceFrames:perPixelTolerance:overallTolerance:createIndexPage:includeFlowDiagram:organizeByDevice:)`**
   — pass it to `DocumentedFlow(configuration:)`. Tolerances are applied at capture time.
   `deviceFrames` (default `true`) composites a device bezel onto catalog images.
+- **`addScreen(... transitions: [ScreenTransition] = [])`** — declare directed edges from
+  this screen to others; edges are optional and default to none (linear order is used
+  when no screen declares any transitions).
+- **`ScreenTransition.to(_ target: String, on: String? = nil)`** — a transition to another
+  screen identified by title or id, with an optional edge label (e.g. `"continue as guest"`).
+- **`exportFlowExplorer(at:snapshotSourcePath:configuration:) async throws -> ExportedFeature`**
+  — writes a static, interactive Flow Explorer web bundle (Cytoscape.js + dagre) to the
+  given directory. Open `index.html` in any browser; `file://` works — no server needed.
+- **`FlowExplorer.rebuildManifest(at:)`** — rescans a directory for all exported features
+  and rewrites the shared manifest. Call once after all features have been exported to
+  guarantee the multi-feature index is complete.
 
 ## Common mistakes (and the fix)
 
@@ -119,6 +130,7 @@ xcodebuild test \
 | Verify fails with no reference snapshot | Baselines not committed | Record once (`RECORD_SNAPSHOTS=1`), commit the `__Snapshots__` PNGs |
 | Package won't build in the app target | Added to the wrong target | Add it to the **test** target only |
 | Docs have broken image links | Capture didn't run (e.g. macOS) | Capture on iOS; generation **throws** if zero images — read the error, it names the fix |
+| Flow Explorer page is blank / `flows.js` fails to load over `file://` | Expecting a server | Data is emitted as JS globals, so double-clicking `index.html` works; any static server is also fine |
 
 ## Notes for agents
 

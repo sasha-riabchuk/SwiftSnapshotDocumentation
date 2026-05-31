@@ -267,123 +267,28 @@ final class DoCCGenerator {
     @discardableResult
     private func copySnapshotImages(to destinationPath: String) throws -> Int {
         let fileManager = FileManager.default
+        let (sourcePath, searched) = SnapshotImageCopier.resolveSourceDirectory(provided: snapshotSourcePath, fileManager: fileManager)
+        guard let sourcePath else { throw DocumentationError.snapshotsNotFound(searchedPaths: searched) }
 
-        let (sourcePath, searchedPaths) = resolveSnapshotSourcePath(fileManager)
-        guard let sourcePath else {
-            throw DocumentationError.snapshotsNotFound(searchedPaths: searchedPaths)
-        }
-
-        let copiedCount = try copyImagesRecursively(
-            from: sourcePath,
-            to: destinationPath,
-            fileManager: fileManager
-        )
-
-        guard copiedCount > 0 else {
-            throw DocumentationError.noSnapshotsCopied(sourcePath: sourcePath)
-        }
-
-        print("📸 Copied \(copiedCount) snapshot images from \(sourcePath)")
-        return copiedCount
-    }
-
-    /// Determines which `__Snapshots__` directory to read images from.
-    ///
-    /// Resolution order: an explicitly provided path (passed by ``DocumentedFlow``,
-    /// derived deterministically from the test's `#file`), then a best-effort
-    /// auto-detection relative to the working directory as a fallback.
-    ///
-    /// - Returns: The resolved source path (or `nil`) and the list of paths searched.
-    private func resolveSnapshotSourcePath(_ fileManager: FileManager) -> (path: String?, searched: [String]) {
-        var searched: [String] = []
-
-        if let provided = snapshotSourcePath {
-            searched.append(provided)
-            if fileManager.fileExists(atPath: provided) {
-                return (provided, searched)
+        let snapshotIndex = try SnapshotImageCopier.index(at: sourcePath, fileManager: fileManager)
+        var copied = 0
+        // Copy order is irrelevant — DocC resolves images by filename.
+        for (cleanedName, sourceFilePath) in snapshotIndex {
+            let device = device(forImageName: cleanedName)
+            let subdir: String
+            if configuration.organizeByDevice, let device {
+                subdir = "/\(device.name)"
+            } else {
+                subdir = ""
             }
+            let destPath = "\(destinationPath)\(subdir)/\(cleanedName)"
+            let frame = (configuration.deviceFrames ? device?.frame : nil)
+            try SnapshotImageCopier.copyImage(from: sourceFilePath, to: destPath, frame: frame)
+            copied += 1
         }
-
-        // Fallback: scan a couple of common locations relative to the working
-        // directory for a `__Snapshots__/<TestClass>` directory.
-        let currentPath = fileManager.currentDirectoryPath
-        let baseCandidates = [
-            "\(currentPath)/__Snapshots__",
-            "\(currentPath)/Tests/__Snapshots__"
-        ]
-
-        for basePath in baseCandidates {
-            searched.append(basePath)
-            guard fileManager.fileExists(atPath: basePath),
-                  let testDirs = try? fileManager.contentsOfDirectory(atPath: basePath) else {
-                continue
-            }
-            for testDir in testDirs {
-                let fullPath = "\(basePath)/\(testDir)"
-                var isDir: ObjCBool = false
-                if fileManager.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
-                    return (fullPath, searched)
-                }
-            }
-        }
-
-        return (nil, searched)
-    }
-
-    /// Recursively copies `.png`/`.jpg` images, stripping the snapshot-testing test
-    /// name prefix (e.g. `testFoo.01-welcome-iPhone15Pro-light.png` → `01-welcome-iPhone15Pro-light.png`).
-    ///
-    /// - Returns: The number of images copied.
-    private func copyImagesRecursively(
-        from path: String,
-        to destinationPath: String,
-        fileManager: FileManager
-    ) throws -> Int {
-        var copiedCount = 0
-        let contents = try fileManager.contentsOfDirectory(atPath: path)
-
-        for item in contents {
-            let itemPath = "\(path)/\(item)"
-            var isDir: ObjCBool = false
-            guard fileManager.fileExists(atPath: itemPath, isDirectory: &isDir) else { continue }
-
-            if isDir.boolValue {
-                copiedCount += try copyImagesRecursively(
-                    from: itemPath,
-                    to: destinationPath,
-                    fileManager: fileManager
-                )
-            } else if item.hasSuffix(".png") || item.hasSuffix(".jpg") {
-                let cleanedFilename = strippedSnapshotName(item)
-                let device = device(forImageName: cleanedFilename)
-
-                // Optionally group images into per-device subfolders. DocC resolves
-                // resources by filename regardless of folder, so the article links
-                // don't change.
-                let destinationDir: String
-                if configuration.organizeByDevice, let device {
-                    destinationDir = "\(destinationPath)/\(device.name)"
-                    try fileManager.createDirectory(atPath: destinationDir, withIntermediateDirectories: true)
-                } else {
-                    destinationDir = destinationPath
-                }
-
-                let destPath = "\(destinationDir)/\(cleanedFilename)"
-                if fileManager.fileExists(atPath: destPath) {
-                    try fileManager.removeItem(atPath: destPath)
-                }
-
-                // Composite a device bezel when requested (PNGs only); otherwise copy.
-                if configuration.deviceFrames, let device, item.hasSuffix(".png") {
-                    try DeviceFrameRenderer.writeFramedPNG(from: itemPath, to: destPath, frame: device.frame)
-                } else {
-                    try fileManager.copyItem(atPath: itemPath, toPath: destPath)
-                }
-                copiedCount += 1
-            }
-        }
-
-        return copiedCount
+        guard copied > 0 else { throw DocumentationError.noSnapshotsCopied(sourcePath: sourcePath) }
+        print("📸 Copied \(copied) snapshot images from \(sourcePath)")
+        return copied
     }
 
     /// Finds the device a cleaned snapshot filename belongs to.
@@ -407,22 +312,6 @@ final class DoCCGenerator {
             result.append(device)
         }
         return result
-    }
-
-    /// Removes the leading `<testName>.` prefix that swift-snapshot-testing prepends
-    /// to recorded filenames, leaving the `NN-id-device-theme.ext` portion.
-    ///
-    /// Anchors on the numbered identifier (`NN-`) rather than a fixed prefix length,
-    /// so it works regardless of how short or long the test function name is. Files
-    /// that already lack a prefix are returned unchanged.
-    private func strippedSnapshotName(_ filename: String) -> String {
-        guard let match = filename.range(
-            of: #"^.*?\.(?=\d{2}-)"#,
-            options: .regularExpression
-        ) else {
-            return filename
-        }
-        return String(filename[match.upperBound...])
     }
 
     /// Calculates the total number of snapshots.

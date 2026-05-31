@@ -171,6 +171,41 @@ let flow = DocumentedFlow(
 )
 ```
 
+### Flow Explorer
+
+Export an interactive, browser-based graph of your screen flow — framed snapshot thumbnails as nodes, directed edges as arrows — by calling `exportFlowExplorer`. Declare transitions between screens using the `transitions:` parameter on `addScreen` to express branches and alternate paths.
+
+```swift
+await flow.addScreen(
+    title: "Welcome",
+    description: "Landing screen",
+    view: { WelcomeView() },
+    devices: [.iPhone15Pro],
+    themes: [.light, .dark],
+    transitions: [
+        .to("Login"),
+        .to("Guest Browse", on: "continue as guest")
+    ]
+)
+
+await flow.addScreen(
+    title: "Login",
+    description: "Authentication",
+    view: { LoginView() },
+    devices: [.iPhone15Pro],
+    themes: [.light, .dark],
+    transitions: [.to("Home")]
+)
+
+try await flow.exportFlowExplorer(at: "FlowExplorer")
+```
+
+Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals so `file://` works with no server required.
+
+Note: when any screen declares `transitions:`, the linear fallback is disabled flow-wide, so screens without an incoming or outgoing transition appear as unconnected nodes — give every screen a transition for a fully connected graph.
+
+To build a multi-feature explorer, call `exportFlowExplorer(at:)` with the same directory from each feature's test, then call `FlowExplorer.rebuildManifest(at: "FlowExplorer")` once after all features have been exported to finalize the shared index.
+
 ### Documenting Multiple View States
 
 Document different states of the same screen by adding multiple screen entries:

@@ -353,4 +353,68 @@ final class ExampleFlowDocumentationTests: XCTestCase {
         let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
         print("🗂  Regression: \(exported.screenCount) screens at \(exported.featurePath)")
     }
+
+    /// A showcase of recent SwiftUI features — MeshGradient, Liquid Glass, Gauge / Swift
+    /// Charts, ContentUnavailableView. The two Liquid Glass screens deliberately contrast
+    /// the real `.glassEffect()` (which renders transparent in an offscreen snapshot) with
+    /// a rasterizable documentation stand-in, demonstrating the recommended approach.
+    func testGenerateModernSwiftUIFlow() async throws {
+        let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
+
+        let flow = DocumentedFlow(
+            name: "Modern SwiftUI",
+            summary: "Recent SwiftUI features, captured for documentation",
+            overview: """
+            A reference gallery of recent SwiftUI APIs: `MeshGradient` (iOS 18), Liquid
+            Glass (`.glassEffect()`, iOS 26), `Gauge` + Swift `Charts` (iOS 16), and
+            `ContentUnavailableView` (iOS 17).
+
+            Liquid Glass is a backdrop effect — it samples the content behind it, so an
+            offscreen snapshot captures it transparent. The two glass screens contrast the
+            real API with a documentation-friendly stand-in.
+            """,
+            record: isRecording ? .record : .verify
+        )
+
+        let devices: [DeviceConfiguration] = [.iPhone15Pro]
+        let themes: [ThemeConfiguration] = [.light, .dark]
+
+        await flow.addScreen(
+            title: "Mesh Gradient",
+            description: "A 3×3 MeshGradient hero (iOS 18)",
+            view: { MeshGradientHeroView() }, devices: devices, themes: themes,
+            callouts: [.init(type: .tip, content: "MeshGradient rasterizes fine — no special handling needed")],
+            transitions: [.to("Liquid Glass — Real")]
+        )
+        await flow.addScreen(
+            title: "Liquid Glass — Real",
+            description: "Real `.glassEffect()` (iOS 26) — note the transparent backdrop offscreen",
+            discussion: "Liquid Glass samples the framebuffer behind it, which an offscreen snapshot can't provide, so the capsule fill is missing (the label floats). Capture the real effect with `captureMode: .hostWindow` from a host-app test target, or substitute a stand-in.",
+            view: { LiquidGlassRealView() }, devices: devices, themes: themes,
+            callouts: [.init(type: .warning, content: "Glass renders transparent in offscreen capture — see the stand-in screen")],
+            transitions: [.to("Liquid Glass — Stand-in")]
+        )
+        await flow.addScreen(
+            title: "Liquid Glass — Stand-in",
+            description: "A rasterizable glassy stand-in that captures correctly",
+            discussion: "Built from a translucent gradient fill + stroke + shadow, so it renders in an offscreen snapshot while reading as frosted glass — the recommended documentation substitute.",
+            view: { LiquidGlassStandInView() }, devices: devices, themes: themes,
+            callouts: [.init(type: .note, content: "Use this approach when .hostWindow capture isn't available")],
+            transitions: [.to("Gauges & Charts")]
+        )
+        await flow.addScreen(
+            title: "Gauges & Charts",
+            description: "Gauge (iOS 16) and a Swift Charts bar chart",
+            view: { GaugesAndChartView() }, devices: devices, themes: themes,
+            transitions: [.to("Content Unavailable")]
+        )
+        await flow.addScreen(
+            title: "Content Unavailable",
+            description: "ContentUnavailableView (iOS 17) empty state",
+            view: { ContentUnavailableExampleView() }, devices: devices, themes: themes
+        )
+
+        let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
+        print("🗂  Modern SwiftUI: \(exported.screenCount) screens at \(exported.featurePath)")
+    }
 }

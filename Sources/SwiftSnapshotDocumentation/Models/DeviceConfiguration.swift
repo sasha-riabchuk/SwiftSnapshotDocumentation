@@ -52,20 +52,26 @@ public struct DeviceConfiguration: Sendable {
     public let viewImageConfig: Any
     #endif
 
+    /// The bezel geometry used when ``DocumentationConfiguration/deviceFrames`` is enabled.
+    public let frame: DeviceFrame
+
     /// Creates a custom device configuration.
     ///
     /// - Parameters:
     ///   - name: The display name for this device
     ///   - viewImageConfig: The PointFree ViewImageConfig for this device
+    ///   - frame: The bezel geometry for device-framed documentation images
     #if os(iOS)
-    public init(name: String, viewImageConfig: ViewImageConfig) {
+    public init(name: String, viewImageConfig: ViewImageConfig, frame: DeviceFrame = .phone) {
         self.name = name
         self.viewImageConfig = viewImageConfig
+        self.frame = frame
     }
     #else
-    public init(name: String, viewImageConfig: Any) {
+    public init(name: String, viewImageConfig: Any, frame: DeviceFrame = .phone) {
         self.name = name
         self.viewImageConfig = viewImageConfig
+        self.frame = frame
     }
     #endif
 
@@ -73,21 +79,26 @@ public struct DeviceConfiguration: Sendable {
 
     #if os(iOS)
     /// iPhone SE (2nd/3rd generation) - 4.7" display, compact size.
+    ///
+    /// Home-button era, so it is framed without a notch.
     public static let iPhoneSE = DeviceConfiguration(
         name: "iPhoneSE",
-        viewImageConfig: .iPhoneSe
+        viewImageConfig: .iPhoneSe,
+        frame: DeviceFrame(bezelFraction: 0.06, screenCornerFraction: 0.02, notch: .none)
     )
 
     /// iPhone 15 Pro - 6.1" display, standard size.
     public static let iPhone15Pro = DeviceConfiguration(
         name: "iPhone15Pro",
-        viewImageConfig: .iPhone13Pro  // Using closest available
+        viewImageConfig: .iPhone13Pro,  // Using closest available
+        frame: .phone
     )
 
     /// iPhone 15 Pro Max - 6.7" display, large size.
     public static let iPhone15ProMax = DeviceConfiguration(
         name: "iPhone15ProMax",
-        viewImageConfig: .iPhone13ProMax  // Using closest available
+        viewImageConfig: .iPhone13ProMax,  // Using closest available
+        frame: .phone
     )
 
     // MARK: - Predefined iPad Devices
@@ -95,13 +106,15 @@ public struct DeviceConfiguration: Sendable {
     /// iPad Pro 11" - Compact iPad form factor.
     public static let iPadPro11 = DeviceConfiguration(
         name: "iPadPro11",
-        viewImageConfig: .iPadPro11
+        viewImageConfig: .iPadPro11,
+        frame: .pad
     )
 
     /// iPad Pro 12.9" - Large iPad form factor.
     public static let iPadPro129 = DeviceConfiguration(
         name: "iPadPro129",
-        viewImageConfig: .iPadPro12_9
+        viewImageConfig: .iPadPro12_9,
+        frame: .pad
     )
     #endif
 

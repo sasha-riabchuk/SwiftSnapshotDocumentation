@@ -22,6 +22,9 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
     /// fresh checkout).
     case noSnapshotsCopied(sourcePath: String)
 
+    /// An image could not be decoded or re-encoded while compositing a device frame.
+    case imageProcessingFailed(path: String)
+
     public var description: String {
         switch self {
         case let .snapshotsNotFound(searchedPaths):
@@ -36,6 +39,8 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
             Snapshot capture is iOS-only — run the test on an iOS simulator with \
             isRecording = true so screenshots are produced before generating docs.
             """
+        case let .imageProcessingFailed(path):
+            return "Failed to process image while compositing a device frame: \(path)"
         }
     }
 }

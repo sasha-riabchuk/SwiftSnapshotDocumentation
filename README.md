@@ -211,11 +211,11 @@ Customize the generated documentation with `DocumentationConfiguration`:
 ```swift
 let config = DocumentationConfiguration(
     imageFormat: .png,              // Image format (.png or .jpeg)
-    deviceFrames: true,             // Include device bezels in screenshots
+    deviceFrames: true,             // Composite a device bezel around each image
     perPixelTolerance: 0.01,        // Per-pixel comparison tolerance
     overallTolerance: 0.05,         // Fraction of pixels allowed to differ
     createIndexPage: true,          // Generate index page
-    organizeByDevice: false         // Group images by device
+    organizeByDevice: false         // Group catalog images into per-device subfolders
 )
 
 // Pass the configuration at flow creation so the comparison tolerances take
@@ -233,6 +233,15 @@ pixels that must match) and `perPixelTolerance` becomes `perceptualPrecision`
 (`1 - perPixelTolerance`, how closely each pixel must match). Because snapshots
 are compared as they are captured, the configuration must be supplied to
 `DocumentedFlow` rather than only to `generateDocumentation`.
+
+When `deviceFrames` is enabled, each catalog image is composited into a
+procedurally-drawn device bezel (rounded body, inset screen, and a Dynamic Island
+for notch iPhones) using CoreGraphics — no proprietary device artwork is bundled,
+and the per-device geometry is configurable via `DeviceConfiguration.frame`. The
+regression snapshots in `__Snapshots__` are left bare; only the copies placed into
+the DocC catalog are framed. `organizeByDevice` groups those copies into
+per-device subfolders (`Resources/Snapshots/iPhone15Pro/…`); DocC still resolves
+the images by filename, so article links are unaffected.
 
 ## Documentation
 

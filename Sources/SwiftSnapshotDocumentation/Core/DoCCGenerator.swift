@@ -311,17 +311,58 @@ final class DoCCGenerator {
                 )
             } else if item.hasSuffix(".png") || item.hasSuffix(".jpg") {
                 let cleanedFilename = strippedSnapshotName(item)
-                let destPath = "\(destinationPath)/\(cleanedFilename)"
+                let device = device(forImageName: cleanedFilename)
 
+                // Optionally group images into per-device subfolders. DocC resolves
+                // resources by filename regardless of folder, so the article links
+                // don't change.
+                let destinationDir: String
+                if configuration.organizeByDevice, let device {
+                    destinationDir = "\(destinationPath)/\(device.name)"
+                    try fileManager.createDirectory(atPath: destinationDir, withIntermediateDirectories: true)
+                } else {
+                    destinationDir = destinationPath
+                }
+
+                let destPath = "\(destinationDir)/\(cleanedFilename)"
                 if fileManager.fileExists(atPath: destPath) {
                     try fileManager.removeItem(atPath: destPath)
                 }
-                try fileManager.copyItem(atPath: itemPath, toPath: destPath)
+
+                // Composite a device bezel when requested (PNGs only); otherwise copy.
+                if configuration.deviceFrames, let device, item.hasSuffix(".png") {
+                    try DeviceFrameRenderer.writeFramedPNG(from: itemPath, to: destPath, frame: device.frame)
+                } else {
+                    try fileManager.copyItem(atPath: itemPath, toPath: destPath)
+                }
                 copiedCount += 1
             }
         }
 
         return copiedCount
+    }
+
+    /// Finds the device a cleaned snapshot filename belongs to.
+    ///
+    /// Filenames look like `NN-<screen-id>-<deviceName>-<theme>.ext`; the screen id
+    /// may itself contain hyphens, so rather than split, we match each known device
+    /// name anchored by surrounding hyphens (`-iPhone15Pro-`). Anchoring keeps
+    /// `iPhone15Pro` from matching `iPhone15ProMax`.
+    private func device(forImageName filename: String) -> DeviceConfiguration? {
+        for device in knownDevices where filename.contains("-\(device.name)-") {
+            return device
+        }
+        return nil
+    }
+
+    /// The distinct devices referenced by this flow's screens.
+    private var knownDevices: [DeviceConfiguration] {
+        var seen = Set<String>()
+        var result: [DeviceConfiguration] = []
+        for device in screens.flatMap(\.devices) where seen.insert(device.name).inserted {
+            result.append(device)
+        }
+        return result
     }
 
     /// Removes the leading `<testName>.` prefix that swift-snapshot-testing prepends

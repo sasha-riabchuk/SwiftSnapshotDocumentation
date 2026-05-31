@@ -154,4 +154,9 @@ private func fxDevice(_ name: String) -> DeviceConfiguration {
     #expect(feature.edges == [.init(from: "welcome", to: "login", label: nil)])
 
     #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("FlowExplorer/manifest.js").path))
+
+    let explorer = root.appendingPathComponent("FlowExplorer")
+    #expect(FileManager.default.fileExists(atPath: explorer.appendingPathComponent("index.html").path))
+    #expect(FileManager.default.fileExists(atPath: explorer.appendingPathComponent("app.js").path))
+    #expect(FileManager.default.fileExists(atPath: explorer.appendingPathComponent("vendor/cytoscape.min.js").path))
 }

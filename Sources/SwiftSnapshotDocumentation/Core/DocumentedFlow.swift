@@ -318,7 +318,15 @@ public final class DocumentedFlow {
     /// Shares the capture prerequisite of ``generateDocumentation(outputPath:snapshotSourcePath:configuration:)``:
     /// snapshots must already exist (captured on iOS, or committed baselines).
     ///
+    /// - Parameters:
+    ///   - explorerPath: Directory where the Flow Explorer bundle is written/updated.
+    ///   - snapshotSourcePath: Optional explicit `__Snapshots__` path (auto-resolved if nil).
+    ///   - configuration: Generation options; defaults to the flow's configuration.
     /// - Returns: An ``ExportedFeature`` describing what was written.
+    /// - Throws: ``DocumentationError`` if snapshots are missing, or
+    ///   ``DocumentationError/captureUnavailable`` when running off-iOS with no
+    ///   pre-recorded snapshots, or ``DocumentationError/flowExplorerExportFailed(reason:)``
+    ///   if the flow has no screens or the bundled web assets are missing.
     @discardableResult
     public func exportFlowExplorer(
         at explorerPath: String,
@@ -385,6 +393,9 @@ public final class DocumentedFlow {
 public enum FlowExplorer {
     /// Rebuilds `manifest.js` from the `feature.json` markers in `explorerPath`.
     /// Use once after all documentation tests run to guarantee a complete index.
+    ///
+    /// - Parameter explorerPath: The Flow Explorer bundle directory to reindex.
+    /// - Throws: A file-system error if the directory cannot be read or written.
     @MainActor
     public static func rebuildManifest(at explorerPath: String) throws {
         try FlowExplorerExporter.writeManifest(at: explorerPath, fileManager: .default)

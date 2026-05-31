@@ -77,7 +77,7 @@ public struct AlertComponentView: View {
                 .font(.body).frame(height: 44)
             }
             .frame(width: 270)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+            .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         }
     }
 }
@@ -98,10 +98,10 @@ public struct ActionSheetComponentView: View {
                     Divider()
                     sheetRow("Remove Photo", color: .red)
                 }
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
                 Text("Cancel").fontWeight(.semibold).foregroundStyle(.blue)
                     .frame(maxWidth: .infinity).frame(height: 57)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
             }
             .padding(.horizontal, 10).padding(.bottom, 12)
         }
@@ -200,7 +200,7 @@ public struct PopoverComponentView: View {
                     popRow("Delete", "trash", color: .red)
                 }
                 .frame(width: 230)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
             }
             .padding(.top, 120).padding(.trailing, 24)
             .frame(maxWidth: .infinity, alignment: .trailing)
@@ -287,7 +287,7 @@ public struct ToastComponentView: View {
                 Spacer()
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
-            .background(.regularMaterial, in: Capsule())
+            .background(Color(.tertiarySystemBackground), in: Capsule())
             .overlay(Capsule().strokeBorder(Color(.separator).opacity(0.4)))
             .shadow(color: .black.opacity(0.12), radius: 12, y: 4)
             .padding(.horizontal, 16).padding(.top, 56)

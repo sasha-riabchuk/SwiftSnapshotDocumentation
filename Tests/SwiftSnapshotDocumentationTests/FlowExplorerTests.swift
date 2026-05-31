@@ -100,3 +100,17 @@ private func fxTempDir() throws -> URL {
     #expect(FileManager.default.fileExists(atPath: dest.path))
     #expect((try? Data(contentsOf: dest)) == Data([0x89, 0x50]))
 }
+
+@Test func flowDataEncodesToStableJSON() throws {
+    let feature = FlowData.Feature(
+        name: "Onboarding", summary: "s",
+        screens: [.init(id: "welcome", title: "Welcome", description: "d",
+                        thumbnail: "images/01-welcome-iPhone15Pro-light.png",
+                        variants: [.init(device: "iPhone15Pro", theme: "light", image: "images/01-welcome-iPhone15Pro-light.png")],
+                        callouts: [.init(type: "tip", content: "hi")])],
+        edges: [.init(from: "welcome", to: "login", label: "next")])
+    let data = try FlowData.encoder.encode(feature)
+    let decoded = try JSONDecoder().decode(FlowData.Feature.self, from: data)
+    #expect(decoded == feature)
+    #expect(decoded.screens.first?.thumbnail == "images/01-welcome-iPhone15Pro-light.png")
+}

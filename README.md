@@ -260,7 +260,8 @@ let config = DocumentationConfiguration(
     createIndexPage: true,          // Curate a Topics → Screens listing on the root page
     includeFlowDiagram: false,      // Add a Mermaid flow diagram of the screen sequence
     organizeByDevice: false,        // Group catalog images into per-device subfolders
-    captureSettleDuration: 0        // Seconds to let entrance animations settle (see below)
+    captureSettleDuration: 0,       // Seconds to let entrance animations settle (see below)
+    captureMode: .offscreen         // .offscreen (default) or .hostWindow (see below)
 )
 
 // Pass the configuration at flow creation so the comparison tolerances take
@@ -311,6 +312,65 @@ baselines after turning it on.
 > **Note:** `captureSettleDuration` cannot help compositor-backed layers such as
 > `VideoPlayer` / `AVPlayerLayer`, `Map`, or Metal/SceneKit views — they don't
 > rasterize in offscreen snapshots at all. Document a static **poster frame** for those.
+
+### Substituting effects that don't rasterize (`\.isSnapshotCapture`)
+
+Some effects never survive an offscreen snapshot pass: Liquid Glass (`.glassEffect()`)
+and blur materials (`.regularMaterial`, …) render with a transparent backdrop, and
+`VideoPlayer` / `AVPlayerLayer` / Metal views come out blank. The fix is to render a
+documentation-friendly stand-in *only while capturing*. The library publishes a SwiftUI
+environment flag for exactly this — it is `true` while `DocumentedFlow` captures, and
+`false` everywhere else (app runtime, previews):
+
+```swift
+struct ProminentActionButton: View {
+    @Environment(\.isSnapshotCapture) private var isSnapshotCapture
+
+    var body: some View {
+        label
+            .background {
+                if isSnapshotCapture {
+                    Capsule().fill(.tint)            // solid fill — renders in snapshots
+                } else {
+                    Capsule().glassEffect(.regular)  // real Liquid Glass at runtime
+                }
+            }
+    }
+}
+```
+
+Read it anywhere in the documented view tree to swap glass/materials for a solid fill, or
+a video for a poster `Image`. Because the flag defaults to `false`, it has no effect on
+your shipping UI. (`captureSettleDuration` and `\.isSnapshotCapture` are complementary:
+the former fixes *timing* blanks, the latter fixes *non-rasterizing effect* blanks.)
+
+### Capturing real backdrop effects (`captureMode: .hostWindow`)
+
+`\.isSnapshotCapture` substitutes a *stand-in* for glass/materials. If you want the
+**real** composited effect instead, set `captureMode: .hostWindow`:
+
+```swift
+let config = DocumentationConfiguration(captureMode: .hostWindow)
+```
+
+The default `.offscreen` mode renders the view's layer tree (`CALayer.render`) — fully
+device-accurate and works in any test bundle, but `render(in:)` **skips backdrop
+filters**, so Liquid Glass and materials come out transparent. `.hostWindow` instead
+captures through the render server (`drawHierarchy(afterScreenUpdates:)` in the key
+window), which **can** composite those effects.
+
+The trade-off is real and worth understanding:
+
+- `.hostWindow` **requires the snapshot test to run in a host application** (an Xcode app
+  test target with a test host). It **traps** in a pure SwiftPM logic-test bundle — there
+  is no key window to composite — so the library keeps `.offscreen` as the default.
+- Safe-area insets and scale come from the host app's actual window, so output is less
+  device-controllable than `.offscreen`.
+- Whether iOS 26 **Liquid Glass** specifically composites this way is environment-dependent;
+  verify in your own host-app target. Materials are well-established to render under this path.
+
+Practical split: use `.offscreen` + `\.isSnapshotCapture` for portable, fast baselines, and
+reach for `.hostWindow` only on the screens where a true backdrop effect matters.
 
 ## Using with AI coding agents
 

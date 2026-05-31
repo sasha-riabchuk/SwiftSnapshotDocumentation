@@ -115,6 +115,18 @@ xcodebuild test \
   `captureSettleDuration` (default `0`) — seconds to let entrance animations / `onAppear` /
   `.task` settle in a live window before capture; set `0.6`–`1.0` for screens that animate in,
   leave `0` otherwise (synchronous capture, existing baselines unaffected).
+  `captureMode` (default `.offscreen`) — `.offscreen` renders the layer tree (device-accurate,
+  works headless, but **doesn't composite** Liquid Glass / materials); `.hostWindow` captures
+  through the render server so backdrop effects **can** composite, but **requires a host-app
+  test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from
+  the host window. Use `.offscreen` + `\.isSnapshotCapture` by default; `.hostWindow` only
+  where a real backdrop effect matters, and verify it in a hosted target.
+- **`EnvironmentValues.isSnapshotCapture`** (`Bool`) — `true` only while `DocumentedFlow`
+  captures a snapshot, `false` at app runtime / in previews. Read it
+  (`@Environment(\.isSnapshotCapture)`) inside any component to substitute effects that don't
+  rasterize offscreen — render a solid fill instead of `.glassEffect()` / a material, or a
+  poster `Image` instead of a `VideoPlayer`. Defaults to `false`, so it never affects shipping
+  UI. One hook covers glass, materials, and video app-wide — prefer it over a bespoke flag.
 - **`addScreen(... transitions: [ScreenTransition] = [])`** — declare directed edges from
   this screen to others; edges are optional and default to none (linear order is used
   when no screen declares any transitions).
@@ -141,7 +153,8 @@ xcodebuild test \
 | A screen presenting `.alert` / `.sheet` / `.fullScreenCover` / `.popover` / `.confirmationDialog` / `Menu` snapshots as the empty screen behind it | Native presentations live in a **separate UIKit window** the view-snapshot can't see | Render the **presented appearance inline** (a dimmed `ZStack` with the alert card / sheet / popover drawn in the view tree). `TabView` / `NavigationStack` *are* in the tree and snapshot fine. |
 | A card/overlay built with `.regularMaterial` / `.ultraThinMaterial` is **transparent** in the snapshot (content bleeds through) | Blur **materials don't render** in offscreen snapshots | Use a solid color instead, e.g. `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) — renders correctly and still reads as a native elevated card |
 | A screen that **animates in** (`onAppear { withAnimation { … } }` from `opacity 0` / offset / scale) snapshots **blank/white** | A snapshot is one synchronous frame, captured at the *start* of the entrance animation (content still hidden) | Set `DocumentationConfiguration(captureSettleDuration: 0.6...1.0)` — hosts the view in a live window and pumps the run loop so the animation settles before capture. Default `0` is synchronous (existing baselines unaffected); re-record after enabling |
-| A `VideoPlayer` / `AVPlayerLayer` / `Map` / Metal screen is **blank** | Compositor-backed layers don't rasterize in offscreen snapshots; `captureSettleDuration` won't help | Document a **poster frame** (a static `Image`) for these screens instead |
+| A `VideoPlayer` / `AVPlayerLayer` / `Map` / Metal screen is **blank** | Compositor-backed layers don't rasterize in offscreen snapshots; `captureSettleDuration` won't help | Substitute a **poster frame** (static `Image`) while capturing — gate it on `@Environment(\.isSnapshotCapture)` (see below) |
+| A **Liquid Glass** (`.glassEffect()`) button/screen is transparent or blank | Glass samples the backdrop; the default offscreen render skips backdrop filters | Substitute a **solid fill** via `@Environment(\.isSnapshotCapture)` (portable), **or** try `captureMode: .hostWindow` for real-compositor capture (host-app test target only) |
 | Adding a new screen makes the whole `.verify` test fail / re-records every snapshot | `.record` overwrites everything; `.verify` fails on the missing one | Use `record: .recordMissing` (records only the new screens, verifies the rest), then commit the new `__Snapshots__` PNGs |
 | New `addScreen` is an orphan node in the explorer | Once *any* screen declares `transitions:`, linear fallback is off flow-wide | Give the new screen (and/or its neighbors) a `transitions:` edge, or leave it intentionally disconnected |
 | Flow Explorer nodes look blurry / squished for iPad | (fixed in 1.2.0) | Update to ≥1.2.0 — nodes size to the real aspect ratio and thumbnails are high-res JPEG |

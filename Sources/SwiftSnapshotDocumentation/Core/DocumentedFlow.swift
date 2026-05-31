@@ -209,7 +209,11 @@ public final class DocumentedFlow {
         line: UInt
     ) async {
         #if os(iOS)
+        // Mark the view as snapshot-capture so components can substitute effects that
+        // don't rasterize offscreen (Liquid Glass, materials, video) — see
+        // `EnvironmentValues.isSnapshotCapture`.
         let view = AnyView(viewBuilder())
+            .environment(\.isSnapshotCapture, true)
             .preferredColorScheme(theme.colorScheme)
 
         let screenIndex = screens.count
@@ -253,19 +257,52 @@ public final class DocumentedFlow {
                 settleWindow = window
             }
 
-            assertSnapshot(
-                of: host,
-                as: .image(
-                    on: device.viewImageConfig,
-                    precision: self.configuration.snapshotPrecision,
-                    perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
-                    traits: .init(userInterfaceStyle: dark ? .dark : .light)
-                ),
-                named: snapshotName,
-                file: file,
-                testName: testName,
-                line: line
-            )
+            switch self.configuration.captureMode {
+            case .offscreen:
+                // Default: offscreen layer render. Device-accurate, works headless, but
+                // backdrop effects (Liquid Glass, materials) don't composite — substitute
+                // them via `\.isSnapshotCapture`.
+                assertSnapshot(
+                    of: host,
+                    as: .image(
+                        on: device.viewImageConfig,
+                        precision: self.configuration.snapshotPrecision,
+                        perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
+                        traits: .init(userInterfaceStyle: dark ? .dark : .light)
+                    ),
+                    named: snapshotName,
+                    file: file,
+                    testName: testName,
+                    line: line
+                )
+            case .hostWindow:
+                // Real-compositor capture: `drawHierarchy(afterScreenUpdates:)` in the key
+                // window, which CAN composite materials / Liquid Glass — but only when the
+                // test runs in a host application (it traps otherwise). Free the settle
+                // window first so the strategy owns the key window; @State persists.
+                settleWindow?.isHidden = true
+                settleWindow?.rootViewController = nil
+                settleWindow = nil
+                host.view.frame = CGRect(origin: .zero, size: device.viewImageConfig.size ?? UIScreen.main.bounds.size)
+                let traits = UITraitCollection(traitsFrom: [
+                    device.viewImageConfig.traits,
+                    UITraitCollection(userInterfaceStyle: dark ? .dark : .light)
+                ])
+                assertSnapshot(
+                    of: host.view,
+                    as: .image(
+                        drawHierarchyInKeyWindow: true,
+                        precision: self.configuration.snapshotPrecision,
+                        perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
+                        size: device.viewImageConfig.size,
+                        traits: traits
+                    ),
+                    named: snapshotName,
+                    file: file,
+                    testName: testName,
+                    line: line
+                )
+            }
 
             // Tear down the settle window after capture.
             settleWindow?.isHidden = true

@@ -170,6 +170,48 @@ people up constantly:
    — `captureSettleDuration` does **not** help (the layer never produces a bitmap). Document a
    **poster frame** (a static `Image`) for these instead.
 
+5. **Liquid Glass renders transparent/blank.** `.glassEffect()` (iOS 26) samples the
+   backdrop, so offscreen it loses its fill (button becomes floating text) or blanks the
+   screen on some toolchains — same bucket as materials and video. **Substitute it during
+   capture** using the published environment flag: read `@Environment(\.isSnapshotCapture)`
+   (`true` only while `DocumentedFlow` captures, `false` at runtime/previews) and render a
+   solid fill instead of glass — see the *Substituting effects* section below. This is the
+   clean, app-wide alternative to threading a bespoke "snapshot mode" flag through your
+   components; it works for materials and video too.
+
+## Substituting effects that don't rasterize (`\.isSnapshotCapture`)
+
+For effects that can't be captured offscreen (Liquid Glass, materials, video, Metal),
+render a documentation stand-in *only while capturing*. `DocumentedFlow` sets the
+`\.isSnapshotCapture` environment value to `true` during capture (and it is `false` at
+runtime and in previews), so a component can switch its own appearance:
+
+```swift
+struct ProminentActionButton: View {
+    @Environment(\.isSnapshotCapture) private var isSnapshotCapture
+    var body: some View {
+        label.background {
+            isSnapshotCapture
+                ? AnyView(Capsule().fill(.tint))           // renders in snapshots
+                : AnyView(Capsule().glassEffect(.regular)) // real Liquid Glass at runtime
+        }
+    }
+}
+```
+
+Read it anywhere in the documented view tree. It defaults to `false`, so it never affects
+shipping UI. Prefer this over a custom flag — one hook covers glass, materials, and video
+app-wide. Pair with `captureSettleDuration` when a substituted screen also animates in.
+
+**Want the real effect instead of a stand-in?** Set `DocumentationConfiguration(captureMode:
+.hostWindow)`. The default `.offscreen` renders the layer tree (device-accurate, works in any
+test bundle, but skips backdrop filters → glass/materials transparent). `.hostWindow` captures
+through the render server so those effects **can** composite — but it **requires a host-app
+test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from the
+host window. Materials render under it; whether iOS 26 Liquid Glass does is environment-specific,
+so verify in your hosted target. Use `.offscreen` + the flag by default; `.hostWindow` only where
+a true backdrop effect matters.
+
 ## Adding a screen to an existing, already-recorded flow
 
 Set the flow's `record:` to **`.recordMissing`** for that run: it records only the new

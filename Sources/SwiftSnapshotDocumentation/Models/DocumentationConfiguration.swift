@@ -46,7 +46,9 @@ public struct DocumentationConfiguration: Sendable {
         /// device-accurate (size, safe area, traits). **Does not composite backdrop
         /// effects** — Liquid Glass (`.glassEffect()`) and blur materials render
         /// transparent, because `CALayer.render(in:)` skips backdrop filters by design.
-        /// Substitute those via ``EnvironmentValues/isSnapshotCapture``. This is the default.
+        /// Substitute those in your own view — pick a non-glass style, or read a
+        /// documentation flag you define yourself and set in the `view:` builder. This is
+        /// the default.
         case offscreen
 
         /// Real-compositor capture via `drawHierarchy(afterScreenUpdates:)` in the key window.
@@ -133,9 +135,9 @@ public struct DocumentationConfiguration: Sendable {
     /// How pixels are produced during capture.
     ///
     /// - Default: ``CaptureMode/offscreen`` — device-accurate and works headless, but
-    ///   doesn't composite backdrop effects (use ``EnvironmentValues/isSnapshotCapture``
-    ///   to substitute them). Switch to ``CaptureMode/hostWindow`` from a host-app test
-    ///   target to attempt real-compositor capture of materials / Liquid Glass.
+    ///   doesn't composite backdrop effects (substitute them in your own view). Switch to
+    ///   ``CaptureMode/hostWindow`` from a host-app test target to attempt real-compositor
+    ///   capture of materials / Liquid Glass.
     public let captureMode: CaptureMode
 
     /// Creates a documentation configuration with default values.

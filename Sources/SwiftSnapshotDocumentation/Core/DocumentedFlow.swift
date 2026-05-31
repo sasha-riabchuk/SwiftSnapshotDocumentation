@@ -209,11 +209,7 @@ public final class DocumentedFlow {
         line: UInt
     ) async {
         #if os(iOS)
-        // Mark the view as snapshot-capture so components can substitute effects that
-        // don't rasterize offscreen (Liquid Glass, materials, video) — see
-        // `EnvironmentValues.isSnapshotCapture`.
         let view = AnyView(viewBuilder())
-            .environment(\.isSnapshotCapture, true)
             .preferredColorScheme(theme.colorScheme)
 
         let screenIndex = screens.count
@@ -261,7 +257,8 @@ public final class DocumentedFlow {
             case .offscreen:
                 // Default: offscreen layer render. Device-accurate, works headless, but
                 // backdrop effects (Liquid Glass, materials) don't composite — substitute
-                // them via `\.isSnapshotCapture`.
+                // them in your own view (a real style, or your own documentation flag set
+                // in the `view:` builder), or capture via `.hostWindow`.
                 assertSnapshot(
                     of: host,
                     as: .image(

@@ -99,6 +99,38 @@ xcodebuild test \
 - Confirm `<output>.docc/Resources/Snapshots/` contains the images and that
   `<output>.docc/<Name>.md` plus per-screen `NN-*.md` articles exist.
 
+## Flow Explorer
+
+Export an interactive graph of the screen flow (framed thumbnail nodes + directed edges)
+alongside your DocC catalog:
+
+```swift
+// Declare transitions on each screen to express branches:
+await flow.addScreen(
+    title: "Welcome",
+    description: "Landing screen",
+    view: { WelcomeView() },
+    devices: [.iPhone15Pro],
+    themes: [.light, .dark],
+    transitions: [
+        .to("Login"),
+        .to("Guest Browse", on: "continue as guest")
+    ]
+)
+
+// Write the web bundle:
+try await flow.exportFlowExplorer(at: "FlowExplorer")
+```
+
+Open `FlowExplorer/index.html` in a browser — data is emitted as JS globals so `file://`
+works with no server required.
+
+If no screen declares `transitions:`, edges follow `addScreen` order (linear). Targets that
+cannot be resolved by title or id are skipped and reported in `ExportedFeature.unresolvedTransitions`.
+
+For multiple features, export each into the same directory, then call
+`FlowExplorer.rebuildManifest(at: "FlowExplorer")` once to finalize the shared index.
+
 ## Pitfalls
 
 - Adding the package to the app target instead of the test target.

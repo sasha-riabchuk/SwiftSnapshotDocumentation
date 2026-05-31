@@ -135,6 +135,34 @@ private func loadPNG(_ url: URL) -> CGImage? {
     return CGImageSourceCreateImageAtIndex(src, 0, nil)
 }
 
+/// A top=red / bottom=blue image created the way production snapshots arrive: via
+/// `CGContext.makeImage()` and round-tripped through a PNG (so its orientation matches
+/// an ImageIO-loaded file). Use this for orientation/notch assertions —
+/// `makeTopRedBottomBlueImage` builds a buffer-backed CGImage whose orientation is
+/// inverted relative to real PNGs, which previously masked a notch-placement bug.
+private func realTopRedBottomBlueImage(width: Int, height: Int) -> CGImage {
+    let ctx = CGContext(
+        data: nil, width: width, height: height,
+        bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )!
+    // Bottom-up context: high y is the visual top.
+    ctx.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: CGFloat(height) / 2, width: CGFloat(width), height: CGFloat(height) / 2))
+    ctx.setFillColor(CGColor(red: 0, green: 0, blue: 1, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height) / 2))
+    let image = ctx.makeImage()!
+    // Round-trip through PNG entirely in memory so the result has ImageIO orientation.
+    let data = NSMutableData()
+    let dest = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil)!
+    CGImageDestinationAddImage(dest, image, nil)
+    guard CGImageDestinationFinalize(dest),
+          let src = CGImageSourceCreateWithData(data, nil),
+          let reloaded = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return image }
+    return reloaded
+}
+
 /// Reads pixels of `image` in a top-left coordinate system, RGBA premultiplied.
 private func pixels(of image: CGImage) -> (width: Int, height: Int, data: [UInt8]) {
     let w = image.width, h = image.height
@@ -166,10 +194,7 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
 }
 
 @Test func renderFramedImageAddsBezelPreservesOrientationAndDrawsNotch() {
-    let input = makeTopRedBottomBlueImage(width: 100, height: 200)
-    let inputPixels = pixels(of: input)
-    let inputTop = pixel(inputPixels, 20, 50)
-    let inputBottom = pixel(inputPixels, 20, 150)
+    let input = realTopRedBottomBlueImage(width: 100, height: 200)  // real-PNG orientation
 
     let framed = DeviceFrameRenderer.renderFramedImage(input, frame: .phone)
     #expect(framed != nil)
@@ -181,32 +206,38 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
 
     let p = pixels(of: framed)
 
+    // NOTE: `pixels(of:)` samples y from the image's BOTTOM edge, so the screenshot's
+    // TOP (red) appears at HIGH y and its bottom (blue) at low y. The Dynamic Island,
+    // which must sit at the device's top, therefore appears at high y.
+
     // Bezel (left edge, mid-height) is black.
     let bezel = pixel(p, 1, 104)
     #expect(bezel.r < 40 && bezel.g < 40 && bezel.b < 40 && bezel.a > 200)
 
-    // Orientation is preserved: the screenshot's top maps to the framed top
-    // (screen origin is the bezel inset, so input (20,50) -> framed (24,54)).
-    #expect(channelsClose(pixel(p, 24, 54), inputTop))
-    #expect(channelsClose(pixel(p, 24, 154), inputBottom))
+    // Orientation preserved: red = screenshot top (high y), blue = bottom (low y).
+    let screenTop = pixel(p, 20, 180)
+    #expect(screenTop.r > 200 && screenTop.b < 60)
+    let screenBottom = pixel(p, 20, 30)
+    #expect(screenBottom.b > 200 && screenBottom.r < 60)
 
-    // Dynamic Island pill sits over the top-center of the screen.
-    let notch = pixel(p, 54, 8)
-    #expect(notch.r < 40 && notch.g < 40 && notch.b < 40 && notch.a > 200)
+    // Dynamic Island is over the screenshot's TOP (high y, same side as red), NOT the
+    // bottom — the regression guard for "notch on the wrong end".
+    let notchAtTop = pixel(p, 54, 200)
+    #expect(notchAtTop.r < 40 && notchAtTop.g < 40 && notchAtTop.b < 40 && notchAtTop.a > 200)
+    let screenBottomCenter = pixel(p, 54, 8)
+    #expect(!(screenBottomCenter.r < 40 && screenBottomCenter.g < 40 && screenBottomCenter.b < 40))
 }
 
 @Test func renderFramedImageWithoutNotchLeavesTopCenterVisible() {
-    let input = makeTopRedBottomBlueImage(width: 100, height: 200)
-    let inputTop = pixel(pixels(of: input), 50, 8)
+    let input = realTopRedBottomBlueImage(width: 100, height: 200)
 
     let framed = DeviceFrameRenderer.renderFramedImage(input, frame: .pad)
     #expect(framed != nil)
     guard let framed else { return }
 
-    // With no notch, the top-center pixel shows the screenshot, not a black pill.
-    let topCenter = pixel(pixels(of: framed), 54, 12)
-    #expect(channelsClose(topCenter, inputTop))
-    #expect(!(topCenter.r < 40 && topCenter.g < 40 && topCenter.b < 40))
+    // With no notch, the screenshot's top-center (high y, red) shows through — no black pill.
+    let topCenter = pixel(pixels(of: framed), 54, 196)
+    #expect(topCenter.r > 200 && topCenter.b < 60)
 }
 
 // MARK: - deviceFrames + organizeByDevice wired through generation

@@ -104,16 +104,15 @@ enum DeviceFrameRenderer {
         context.draw(image, in: screenRect)
         context.restoreGState()
 
-        // Sensor housing. `context.draw(image:)` renders the screenshot upright
-        // while path fills are vertically mirrored relative to it in this flipped
-        // context, so the island is positioned from the high-y (visual top) edge to
-        // land just below the top of the displayed screenshot.
+        // Sensor housing. The screenshot is drawn upright (via the local flip above),
+        // so the island sits just below the top bezel — i.e. over the top of the
+        // displayed screenshot, matching a real device.
         if frame.notch == .island {
             let islandWidth = screenWidth * 0.32
             let islandHeight = bezel * 1.1
             let islandRect = CGRect(
                 x: bezel + (screenWidth - islandWidth) / 2,
-                y: outputHeight - bezel - islandHeight * 1.5,
+                y: bezel + islandHeight * 0.5,
                 width: islandWidth,
                 height: islandHeight
             )

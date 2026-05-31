@@ -334,7 +334,7 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             description: "Full-bleed gradient + top-aligned text + .infinity frame (issue #2)",
             discussion: "Rendered blank under the old view-only capture on iOS 26; fixed in 1.2.2 by hosting in a UIHostingController.",
             view: { LayoutDrivenRegressionView() },
-            devices: [.iPhone15Pro],
+            devices: [.iPhone15Pro, .iPadPro129],
             themes: [.light, .dark],
             callouts: [.init(type: .note, content: "This layout collapsed to blank before 1.2.2")],
             transitions: [.to("Entrance Animation")]
@@ -345,7 +345,7 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             description: "Content revealed by onAppear { withAnimation } from opacity 0",
             discussion: "A synchronous capture recorded the hidden first frame; captureSettleDuration (1.3.0) lets the reveal complete first.",
             view: { EntranceAnimationRegressionView() },
-            devices: [.iPhone15Pro],
+            devices: [.iPhone15Pro, .iPadPro129],
             themes: [.light, .dark],
             callouts: [.init(type: .tip, content: "Captured with captureSettleDuration: 0.8")]
         )

@@ -311,6 +311,38 @@ public final class DocumentedFlow {
         }
     }
 
+    /// Exports this flow into a Flow Explorer bundle at `explorerPath`.
+    ///
+    /// Writes `<Name>/{feature.json, flows.js, images/}`, copies the vendored web
+    /// bundle (index.html/app.js/vendor) if absent, and rebuilds `manifest.js`.
+    /// Shares the capture prerequisite of ``generateDocumentation(outputPath:snapshotSourcePath:configuration:)``:
+    /// snapshots must already exist (captured on iOS, or committed baselines).
+    ///
+    /// - Returns: An ``ExportedFeature`` describing what was written.
+    @discardableResult
+    public func exportFlowExplorer(
+        at explorerPath: String,
+        snapshotSourcePath: String? = nil,
+        configuration: DocumentationConfiguration? = nil
+    ) async throws -> ExportedFeature {
+        let exporter = FlowExplorerExporter(
+            flow: self,
+            screens: screens,
+            snapshotSourcePath: snapshotSourcePath ?? resolvedSnapshotDirectory,
+            configuration: configuration ?? self.configuration
+        )
+        #if os(iOS)
+        let captureSupported = true
+        #else
+        let captureSupported = false
+        #endif
+        do {
+            return try exporter.export(at: explorerPath)
+        } catch let error as DocumentationError {
+            throw Self.mappedGenerationError(error, captureSupported: captureSupported)
+        }
+    }
+
     /// Maps a generic "no snapshots" generation failure to ``DocumentationError/captureUnavailable``
     /// when snapshot capture isn't supported on the current platform.
     ///
@@ -346,5 +378,15 @@ public final class DocumentedFlow {
             .appendingPathComponent("__Snapshots__")
             .appendingPathComponent(fileName)
             .path
+    }
+}
+
+/// Entry points for maintaining a Flow Explorer bundle.
+public enum FlowExplorer {
+    /// Rebuilds `manifest.js` from the `feature.json` markers in `explorerPath`.
+    /// Use once after all documentation tests run to guarantee a complete index.
+    @MainActor
+    public static func rebuildManifest(at explorerPath: String) throws {
+        try FlowExplorerExporter.writeManifest(at: explorerPath, fileManager: .default)
     }
 }

@@ -162,3 +162,19 @@ private func fxDevice(_ name: String) -> DeviceConfiguration {
     #expect(FileManager.default.fileExists(atPath: explorer.appendingPathComponent("app.js").path))
     #expect(FileManager.default.fileExists(atPath: explorer.appendingPathComponent("vendor/cytoscape.min.js").path))
 }
+
+@MainActor
+@Test func rebuildManifestListsFeatureMarkers() throws {
+    let root = try fxTempDir(); defer { try? FileManager.default.removeItem(at: root) }
+    let explorer = root.appendingPathComponent("FlowExplorer")
+    for name in ["Onboarding", "Checkout"] {
+        let dir = explorer.appendingPathComponent(name)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let feature = FlowData.Feature(name: name, summary: "", screens: [], edges: [])
+        try FlowData.encoder.encode(feature).write(to: dir.appendingPathComponent("feature.json"))
+    }
+    try FlowExplorer.rebuildManifest(at: explorer.path)
+    let js = try String(contentsOf: explorer.appendingPathComponent("manifest.js"), encoding: .utf8)
+    #expect(js.contains("Onboarding"))
+    #expect(js.contains("Checkout"))
+}

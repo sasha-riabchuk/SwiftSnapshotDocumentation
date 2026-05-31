@@ -24,7 +24,7 @@ xcodebuild test -scheme SwiftSnapshotDocumentation \
   -only-testing:ExampleFlowDocumentationTests
 ```
 
-A plain `swift test` on the Mac will pass but document nothing visual.
+Note: `swift test` on the Mac does **not even build** — `ExampleFlowDocumentationTests` references iOS-only device constants (`.iPhone15Pro`, etc., gated behind `#if os(iOS)`) unconditionally, so the whole test build fails for macOS. Run the test suite via `xcodebuild test ... -destination 'platform=iOS Simulator,...'`. Boot a simulator first (`xcrun simctl boot <id>`) if `xcodebuild` reports "Invalid connectionUUID". The pure-logic unit tests live in `SwiftSnapshotDocumentationTests` and can be run in isolation with `-only-testing:SwiftSnapshotDocumentationTests`.
 
 ## Recording vs. verifying
 
@@ -40,7 +40,7 @@ The public API is a small builder + an internal generator, split into `Core/` an
 
 - **`DocumentedFlow`** (`Core/`, `@MainActor`) — the entry point. `addScreen(...)` is the core method: it appends a `DocumentedScreen` and immediately loops every device×theme combination calling `captureSnapshot`. `generateDocumentation(...)` hands off to `DoCCGenerator`. Note `addScreen` captures snapshots eagerly as it's called, while doc generation happens later — so screen order in the file is the order in the docs.
 
-- **`DoCCGenerator`** (`Core/`, internal) — pure file-writing. Creates the `.docc` directory tree, writes the main catalog `.md` (with `@TechnologyRoot`/`@PageKind`), writes one numbered article per screen (`01-<id>.md`, …) with light/dark side-by-side tables and prev/next/up navigation, then **copies** images out of `__Snapshots__` into `Resources/Snapshots/`, stripping the `testName.` filename prefix.
+- **`DoCCGenerator`** (`Core/`, internal) — pure file-writing. Creates the `.docc` directory tree, **copies** images out of `__Snapshots__` into `Resources/Snapshots/` (stripping the `testName.` filename prefix, anchored on the `NN-` identifier), then writes the main catalog `.md` (with `@TechnologyRoot`/`@PageKind`) and one numbered article per screen (`01-<id>.md`, …) with light/dark side-by-side tables and prev/next/up navigation. The snapshot source dir is resolved deterministically from the test's `#file` (via `DocumentedFlow.snapshotDirectory(forFile:)`), not guessed from the working directory. Generation **throws** `DocumentationError` if no snapshots are found or none are copied, rather than silently emitting a catalog with broken image links — so the image copy happens before any Markdown is written.
 
 - **Models** — value types describing the inputs:
   - `DocumentedScreen` — title/description/discussion/callouts + the `() -> any View` builder. `id` is derived from the title via `sanitizedForFilename()` (lowercased, hyphenated) unless given. Defines the nested `Callout` (`.note/.important/.warning/.tip/.experiment`).

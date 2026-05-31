@@ -54,6 +54,10 @@ final class DoCCGenerator {
         try fileManager.createDirectory(atPath: resourcesPath, withIntermediateDirectories: true)
         try fileManager.createDirectory(atPath: snapshotsPath, withIntermediateDirectories: true)
 
+        // Copy snapshot images first and fail loudly if none are found, so we never
+        // emit a catalog whose articles reference images that were never copied.
+        let copiedCount = try copySnapshotImages(to: snapshotsPath)
+
         // Generate main catalog file
         let catalogContent = generateCatalogFile()
         try catalogContent.write(
@@ -73,12 +77,10 @@ final class DoCCGenerator {
             )
         }
 
-        // Copy snapshot images from __Snapshots__ to Resources/Snapshots/
-        try copySnapshotImages(to: snapshotsPath)
-
         print("✅ DocC documentation generated at: \(doccPath)")
         print("📊 Screens documented: \(screens.count)")
         print("📸 Total snapshots: \(totalSnapshotCount())")
+        print("📸 Images copied: \(copiedCount)")
     }
 
     /// Generates the main catalog Markdown file.
@@ -211,102 +213,131 @@ final class DoCCGenerator {
         )
     }
 
-    /// Copies snapshot images from __Snapshots__ directory to Resources/Snapshots/.
-    private func copySnapshotImages(to destinationPath: String) throws {
+    /// Copies snapshot images from the `__Snapshots__` directory to `Resources/Snapshots/`.
+    ///
+    /// - Parameter destinationPath: The `Resources/Snapshots` directory to copy into.
+    /// - Returns: The number of images copied.
+    /// - Throws: ``DocumentationError/snapshotsNotFound(searchedPaths:)`` if no source
+    ///   directory exists, or ``DocumentationError/noSnapshotsCopied(sourcePath:)`` if
+    ///   the directory exists but holds no images.
+    @discardableResult
+    private func copySnapshotImages(to destinationPath: String) throws -> Int {
         let fileManager = FileManager.default
 
-        var snapshotsSourcePath: String?
-
-        // Use provided path if available
-        if let providedPath = snapshotSourcePath {
-            if fileManager.fileExists(atPath: providedPath) {
-                snapshotsSourcePath = providedPath
-            }
+        let (sourcePath, searchedPaths) = resolveSnapshotSourcePath(fileManager)
+        guard let sourcePath else {
+            throw DocumentationError.snapshotsNotFound(searchedPaths: searchedPaths)
         }
 
-        // Otherwise, auto-detect
-        if snapshotsSourcePath == nil {
-            // Find the __Snapshots__ directory (created by swift-snapshot-testing)
-            let currentPath = fileManager.currentDirectoryPath
+        let copiedCount = try copyImagesRecursively(
+            from: sourcePath,
+            to: destinationPath,
+            fileManager: fileManager
+        )
 
-            // Possible snapshot directory locations
-            let possiblePaths = [
-                "\(currentPath)/__Snapshots__",
-                "\(currentPath)/Tests/__Snapshots__"
-            ]
-
-            // Find the first existing __Snapshots__ directory
-            for basePath in possiblePaths {
-                if fileManager.fileExists(atPath: basePath) {
-                    // Look for any test directory inside
-                    if let testDirs = try? fileManager.contentsOfDirectory(atPath: basePath) {
-                        for testDir in testDirs {
-                            let fullPath = "\(basePath)/\(testDir)"
-                            var isDir: ObjCBool = false
-                            if fileManager.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
-                                snapshotsSourcePath = fullPath
-                                break
-                            }
-                        }
-                    }
-                    if snapshotsSourcePath != nil {
-                        break
-                    }
-                }
-            }
+        guard copiedCount > 0 else {
+            throw DocumentationError.noSnapshotsCopied(sourcePath: sourcePath)
         }
 
-        guard let sourcePath = snapshotsSourcePath else {
-            print("⚠️  No snapshots found")
-            if let provided = snapshotSourcePath {
-                print("    Provided path: \(provided)")
-            }
-            print("💡 Make sure to run tests with withSnapshotTesting(record: .all) first")
-            return
-        }
-
-        // Copy all PNG/JPG files recursively
-        var copiedCount = 0
-
-        func copyImagesRecursively(from path: String) throws {
-            let contents = try fileManager.contentsOfDirectory(atPath: path)
-
-            for item in contents {
-                let itemPath = "\(path)/\(item)"
-                var isDir: ObjCBool = false
-
-                if fileManager.fileExists(atPath: itemPath, isDirectory: &isDir) {
-                    if isDir.boolValue {
-                        // Recurse into subdirectory
-                        try copyImagesRecursively(from: itemPath)
-                    } else if item.hasSuffix(".png") || item.hasSuffix(".jpg") {
-                        // Strip test name prefix from snapshot filenames
-                        // e.g., "testGenerateOnboardingFlowDocumentation.01-welcome-screen-iPhone15Pro-light.png"
-                        //    -> "01-welcome-screen-iPhone15Pro-light.png"
-                        let cleanedFilename: String
-                        if let dotIndex = item.firstIndex(of: "."),
-                           item.distance(from: item.startIndex, to: dotIndex) > 10 {
-                            // Has prefix like "testSomething."
-                            cleanedFilename = String(item[item.index(after: dotIndex)...])
-                        } else {
-                            cleanedFilename = item
-                        }
-
-                        let destPath = "\(destinationPath)/\(cleanedFilename)"
-
-                        if fileManager.fileExists(atPath: destPath) {
-                            try fileManager.removeItem(atPath: destPath)
-                        }
-
-                        try fileManager.copyItem(atPath: itemPath, toPath: destPath)
-                        copiedCount += 1
-                    }
-                }
-            }
-        }
-
-        try copyImagesRecursively(from: sourcePath)
         print("📸 Copied \(copiedCount) snapshot images from \(sourcePath)")
+        return copiedCount
+    }
+
+    /// Determines which `__Snapshots__` directory to read images from.
+    ///
+    /// Resolution order: an explicitly provided path (passed by ``DocumentedFlow``,
+    /// derived deterministically from the test's `#file`), then a best-effort
+    /// auto-detection relative to the working directory as a fallback.
+    ///
+    /// - Returns: The resolved source path (or `nil`) and the list of paths searched.
+    private func resolveSnapshotSourcePath(_ fileManager: FileManager) -> (path: String?, searched: [String]) {
+        var searched: [String] = []
+
+        if let provided = snapshotSourcePath {
+            searched.append(provided)
+            if fileManager.fileExists(atPath: provided) {
+                return (provided, searched)
+            }
+        }
+
+        // Fallback: scan a couple of common locations relative to the working
+        // directory for a `__Snapshots__/<TestClass>` directory.
+        let currentPath = fileManager.currentDirectoryPath
+        let baseCandidates = [
+            "\(currentPath)/__Snapshots__",
+            "\(currentPath)/Tests/__Snapshots__"
+        ]
+
+        for basePath in baseCandidates {
+            searched.append(basePath)
+            guard fileManager.fileExists(atPath: basePath),
+                  let testDirs = try? fileManager.contentsOfDirectory(atPath: basePath) else {
+                continue
+            }
+            for testDir in testDirs {
+                let fullPath = "\(basePath)/\(testDir)"
+                var isDir: ObjCBool = false
+                if fileManager.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
+                    return (fullPath, searched)
+                }
+            }
+        }
+
+        return (nil, searched)
+    }
+
+    /// Recursively copies `.png`/`.jpg` images, stripping the snapshot-testing test
+    /// name prefix (e.g. `testFoo.01-welcome-iPhone15Pro-light.png` → `01-welcome-iPhone15Pro-light.png`).
+    ///
+    /// - Returns: The number of images copied.
+    private func copyImagesRecursively(
+        from path: String,
+        to destinationPath: String,
+        fileManager: FileManager
+    ) throws -> Int {
+        var copiedCount = 0
+        let contents = try fileManager.contentsOfDirectory(atPath: path)
+
+        for item in contents {
+            let itemPath = "\(path)/\(item)"
+            var isDir: ObjCBool = false
+            guard fileManager.fileExists(atPath: itemPath, isDirectory: &isDir) else { continue }
+
+            if isDir.boolValue {
+                copiedCount += try copyImagesRecursively(
+                    from: itemPath,
+                    to: destinationPath,
+                    fileManager: fileManager
+                )
+            } else if item.hasSuffix(".png") || item.hasSuffix(".jpg") {
+                let cleanedFilename = strippedSnapshotName(item)
+                let destPath = "\(destinationPath)/\(cleanedFilename)"
+
+                if fileManager.fileExists(atPath: destPath) {
+                    try fileManager.removeItem(atPath: destPath)
+                }
+                try fileManager.copyItem(atPath: itemPath, toPath: destPath)
+                copiedCount += 1
+            }
+        }
+
+        return copiedCount
+    }
+
+    /// Removes the leading `<testName>.` prefix that swift-snapshot-testing prepends
+    /// to recorded filenames, leaving the `NN-id-device-theme.ext` portion.
+    ///
+    /// Anchors on the numbered identifier (`NN-`) rather than a fixed prefix length,
+    /// so it works regardless of how short or long the test function name is. Files
+    /// that already lack a prefix are returned unchanged.
+    private func strippedSnapshotName(_ filename: String) -> String {
+        guard let match = filename.range(
+            of: #"^.*?\.(?=\d{2}-)"#,
+            options: .regularExpression
+        ) else {
+            return filename
+        }
+        return String(filename[match.upperBound...])
     }
 
     /// Calculates the total number of snapshots.

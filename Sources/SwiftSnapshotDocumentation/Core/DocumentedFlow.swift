@@ -62,6 +62,13 @@ public final class DocumentedFlow {
     /// The screens that make up this flow.
     private(set) var screens: [DocumentedScreen] = []
 
+    /// The directory where swift-snapshot-testing wrote this flow's snapshots.
+    ///
+    /// Derived deterministically from the test's `#file` the first time a screen
+    /// is added, so documentation generation reads images from the exact location
+    /// they were written to — independent of the process's working directory.
+    private(set) var resolvedSnapshotDirectory: String?
+
     /// Creates a new documented flow.
     ///
     /// - Parameters:
@@ -126,6 +133,13 @@ public final class DocumentedFlow {
         )
 
         screens.append(screen)
+
+        // Record where snapshot-testing will write images for this test, derived
+        // from the call site's #file. This matches swift-snapshot-testing's own
+        // default layout and removes the need to guess at generation time.
+        if resolvedSnapshotDirectory == nil {
+            resolvedSnapshotDirectory = Self.snapshotDirectory(forFile: file)
+        }
 
         // Capture snapshots for all device/theme combinations
         for device in devices {
@@ -221,10 +235,29 @@ public final class DocumentedFlow {
         let generator = DoCCGenerator(
             flow: self,
             screens: screens,
-            snapshotSourcePath: snapshotSourcePath,
+            snapshotSourcePath: snapshotSourcePath ?? resolvedSnapshotDirectory,
             configuration: configuration
         )
 
         try await generator.generate(at: outputPath)
+    }
+
+    /// Computes the directory swift-snapshot-testing uses for a given test file.
+    ///
+    /// Mirrors snapshot-testing's default: a `__Snapshots__` directory sitting next
+    /// to the test source file, containing a subdirectory named after that file
+    /// (without extension). For `/path/MyTests.swift` this returns
+    /// `/path/__Snapshots__/MyTests`.
+    ///
+    /// - Parameter file: The test's `#file` value.
+    /// - Returns: The absolute path to the snapshots directory for that file.
+    nonisolated static func snapshotDirectory(forFile file: StaticString) -> String {
+        let fileURL = URL(fileURLWithPath: "\(file)", isDirectory: false)
+        let fileName = fileURL.deletingPathExtension().lastPathComponent
+        return fileURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("__Snapshots__")
+            .appendingPathComponent(fileName)
+            .path
     }
 }

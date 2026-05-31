@@ -17,7 +17,7 @@ struct FlowExplorerExporter {
     /// copying the bundle assets if absent, and rebuilding `manifest.js`.
     func export(at explorerPath: String) throws -> ExportedFeature {
         let fileManager = FileManager.default
-        guard !screens.isEmpty else { throw DocumentationError.noSnapshotsCopied(sourcePath: explorerPath) }
+        guard !screens.isEmpty else { throw DocumentationError.flowExplorerExportFailed(reason: "The flow has no screens to export.") }
 
         let featureDir = "\(explorerPath)/\(flow.name)"
         let imagesDir = "\(featureDir)/images"
@@ -77,7 +77,7 @@ struct FlowExplorerExporter {
     }
 
     private func copyAssetsIfNeeded(to explorerPath: String, fileManager: FileManager) throws {
-        guard let assets = Bundle.module.url(forResource: "FlowExplorerAssets", withExtension: nil) else { return }
+        guard let assets = Bundle.module.url(forResource: "FlowExplorerAssets", withExtension: nil) else { throw DocumentationError.flowExplorerExportFailed(reason: "Could not locate the bundled Flow Explorer web assets (FlowExplorerAssets).") }
         for item in ["index.html", "app.js", "vendor"] {
             let dest = "\(explorerPath)/\(item)"
             guard !fileManager.fileExists(atPath: dest) else { continue }
@@ -88,7 +88,7 @@ struct FlowExplorerExporter {
     /// Scans `*/feature.json` and writes `manifest.js` listing every feature.
     static func writeManifest(at explorerPath: String, fileManager: FileManager) throws {
         var entries: [FlowData.ManifestEntry] = []
-        let contents = (try? fileManager.contentsOfDirectory(atPath: explorerPath)) ?? []
+        let contents = try fileManager.contentsOfDirectory(atPath: explorerPath)
         for dir in contents.sorted() {
             let marker = "\(explorerPath)/\(dir)/feature.json"
             guard fileManager.fileExists(atPath: marker),

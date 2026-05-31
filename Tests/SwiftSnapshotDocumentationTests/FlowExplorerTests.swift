@@ -129,6 +129,7 @@ private func fxDevice(_ name: String) -> DeviceConfiguration {
     let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
     try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
     try Data([0x89]).write(to: source.appendingPathComponent("t.01-welcome-iPhone15Pro-light.png"))
+    try Data([0x89]).write(to: source.appendingPathComponent("t.02-login-iPhone15Pro-light.png"))
 
     let flow = DocumentedFlow(name: "Onboarding", summary: "s")
     let screens = [
@@ -143,6 +144,7 @@ private func fxDevice(_ name: String) -> DeviceConfiguration {
 
     #expect(result.screenCount == 2)
     #expect(result.edgeCount == 1)
+    #expect(result.imageCount == 2)
     let featureDir = root.appendingPathComponent("FlowExplorer/Onboarding")
     #expect(FileManager.default.fileExists(atPath: featureDir.appendingPathComponent("feature.json").path))
     #expect(FileManager.default.fileExists(atPath: featureDir.appendingPathComponent("flows.js").path))

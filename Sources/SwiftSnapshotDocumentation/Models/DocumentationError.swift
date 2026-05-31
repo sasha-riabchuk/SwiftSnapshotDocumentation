@@ -30,6 +30,10 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
     /// no pre-recorded snapshots to fall back on.
     case captureUnavailable
 
+    /// A Flow Explorer export could not complete (e.g. no screens, or the bundled
+    /// web assets could not be located). The associated string explains why.
+    case flowExplorerExportFailed(reason: String)
+
     public var description: String {
         switch self {
         case let .snapshotsNotFound(searchedPaths):
@@ -54,6 +58,8 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
             (Generating from already-committed snapshots does work on macOS.)
             """
+        case let .flowExplorerExportFailed(reason):
+            return "Flow Explorer export failed: \(reason)"
         }
     }
 }

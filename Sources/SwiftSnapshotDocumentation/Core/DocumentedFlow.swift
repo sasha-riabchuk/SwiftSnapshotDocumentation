@@ -220,12 +220,20 @@ public final class DocumentedFlow {
                                   theme.name)
 
         let capture = {
+            // Host the view in a real UIHostingController and snapshot the *controller*
+            // (`.image(on:)`) rather than the bare view (`.image(layout: .device)`).
+            // The controller is mounted in a window during capture, so safe-area insets
+            // and `.frame(maxWidth/maxHeight: .infinity)` layouts resolve correctly. On
+            // iOS 26 the view-only strategy renders such layout-driven screens blank
+            // (collapsed safe area); the hosted strategy is byte-identical otherwise.
+            // See https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation/issues/2
+            let host = UIHostingController(rootView: view)
             assertSnapshot(
-                of: view,
+                of: host,
                 as: .image(
+                    on: device.viewImageConfig,
                     precision: self.configuration.snapshotPrecision,
                     perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
-                    layout: .device(config: device.viewImageConfig),
                     traits: .init(userInterfaceStyle: theme.colorScheme == .dark ? .dark : .light)
                 ),
                 named: snapshotName,

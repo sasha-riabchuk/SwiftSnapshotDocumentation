@@ -31,6 +31,8 @@ Swift Snapshot Documentation combines the power of [PointFree's swift-snapshot-t
 
 * **Developer Onboarding**: Help new team members understand the application's UI structure and user flows through automatically generated, always-up-to-date visual documentation.
 
+* **Interactive Flow Explorer**: Export a static, browser-based map of your screens as a branching graph (Cytoscape.js) — pan/zoom, toggle the whole flow between iPhone/iPad and light/dark, click any screen for its variants. Opens straight from `index.html` (no server). See [Flow Explorer](#flow-explorer).
+
 ## Example Output
 
 The library generates DocC catalogs that integrate seamlessly with Xcode's documentation viewer. Here's what the generated documentation looks like:
@@ -68,9 +70,9 @@ Each screen article includes:
 
 This repo comes with a comprehensive example demonstrating the library's capabilities:
 
-* [**Example Flow**](Tests/ExampleFlowDocumentationTests/): A complete onboarding flow documentation including welcome screens, login forms, and profile states across multiple devices and themes.
+* [**Example Flow**](Tests/ExampleFlowDocumentationTests/): an onboarding flow (welcome, login, and profile states) across multiple devices and themes, plus a second **"iOS Components"** feature — a gallery of native components (alert, action sheet, sheets, popover, tab bar, navigation bar, toast). Both are exported into a single multi-feature Flow Explorer bundle.
 
-Run the example to see the generated DocC catalog. Snapshot capture is iOS-only,
+Run the example to see the generated DocC catalog and Flow Explorer. Snapshot capture is iOS-only,
 so run the tests on an iOS simulator (a plain `swift test` on macOS will not build
 the example target, which references iOS-only device constants):
 
@@ -200,7 +202,7 @@ await flow.addScreen(
 try await flow.exportFlowExplorer(at: "FlowExplorer")
 ```
 
-Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals so `file://` works with no server required. Pan/zoom the graph, click a node to see all of a screen's device × theme variants, and use the **toolbar** to flip the whole flow between **iPhone/iPad** and **Light/Dark** (the toggles appear only for the device families and themes your snapshots cover; nodes lacking the exact variant fall back to their closest one).
+Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals (with embedded thumbnails) so `file://` works with **no server**. The viewer is a Figma-style canvas: pan/zoom, click a node to open the inspector with all of a screen's device × theme variants, and use the **toolbar** to flip the whole flow between **iPhone/iPad** and **Light/Dark** (the toggles appear only for the device families and themes your snapshots cover; nodes lacking the exact variant are dimmed and fall back to their closest one).
 
 Note: when any screen declares `transitions:`, the linear fallback is disabled flow-wide, so screens without an incoming or outgoing transition appear as unconnected nodes — give every screen a transition for a fully connected graph.
 

@@ -7,14 +7,18 @@ Guidance for AI coding agents integrating **SwiftSnapshotDocumentation** into a 
 
 A **test-target** dependency that turns SwiftUI screens into DocC documentation.
 You write an XCTest that declares a flow of screens; running it captures
-snapshots (via PointFree's swift-snapshot-testing) and emits a `.docc` catalog.
-One test both **documents** your UI and **guards** it against regressions.
+snapshots (via PointFree's swift-snapshot-testing) and emits a `.docc` catalog
+**and/or** an interactive, browser-based **Flow Explorer** (a Figma-style graph of
+your screens). One test both **documents** your UI and **guards** it against
+regressions.
 
-## Mental model (3 lines)
+## Mental model (4 lines)
 
 1. A `DocumentedFlow` is an ordered list of screens you build with `addScreen`.
 2. `addScreen` captures a snapshot for every `device × theme` immediately.
 3. `generateDocumentation` writes a DocC catalog from those snapshots.
+4. `exportFlowExplorer` writes an interactive web graph from those same snapshots
+   (declare `transitions:` on screens to make it a branching diagram).
 
 ## Integration checklist
 

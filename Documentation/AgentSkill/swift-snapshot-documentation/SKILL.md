@@ -122,8 +122,11 @@ await flow.addScreen(
 try await flow.exportFlowExplorer(at: "FlowExplorer")
 ```
 
-Open `FlowExplorer/index.html` in a browser — data is emitted as JS globals so `file://`
-works with no server required.
+Open `FlowExplorer/index.html` in a browser — data is emitted as JS globals (with
+embedded thumbnails) so `file://` works with no server required. The viewer is a
+Figma-style canvas: pan/zoom, click a node for the inspector (all device × theme
+variants), and a toolbar to toggle the whole flow between **iPhone/iPad** and
+**Light/Dark** (toggles show only for the device families / themes you captured).
 
 If no screen declares `transitions:`, edges follow `addScreen` order (linear). Targets that
 cannot be resolved by title or id are skipped and reported in `ExportedFeature.unresolvedTransitions`.

@@ -130,9 +130,10 @@ struct FlowExplorerExporter {
     /// Produces a downscaled PNG `data:` URI for the image at `imagePath` plus its pixel
     /// dimensions — suitable as a Cytoscape node background that renders over `file://`
     /// and lets the node size to the real aspect ratio. Uses an ImageIO thumbnail
-    /// (orientation-preserving) capped at `maxPixel` (≈2× the on-screen node size for
-    /// crisp retina rendering). Returns nil if the file isn't a decodable image.
-    static func thumbnail(imagePath: String, maxPixel: Int = 480) -> (uri: String, width: Int, height: Int)? {
+    /// (orientation-preserving) capped at `maxPixel`, sized generously so nodes stay
+    /// crisp on retina displays and when zoomed in. Returns nil if the file isn't a
+    /// decodable image.
+    static func thumbnail(imagePath: String, maxPixel: Int = 900) -> (uri: String, width: Int, height: Int)? {
         guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: imagePath) as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -140,11 +141,26 @@ struct FlowExplorerExporter {
             kCGImageSourceCreateThumbnailWithTransform: true
         ]
         guard let thumb = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        let w = thumb.width, h = thumb.height
+
+        // Flatten onto white and encode as JPEG: screenshots compress far better than
+        // PNG, keeping the embedded data URI small at high resolution. The frame's only
+        // transparent pixels are the rounded outer corners, which flatten to white —
+        // invisible on the explorer's white page.
+        guard let ctx = CGContext(
+            data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else { return nil }
+        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.draw(thumb, in: CGRect(x: 0, y: 0, width: w, height: h))
+        guard let flat = ctx.makeImage() else { return nil }
+
         let data = NSMutableData()
-        guard let dest = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
-        CGImageDestinationAddImage(dest, thumb, nil)
+        guard let dest = CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(dest, flat, [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
         guard CGImageDestinationFinalize(dest) else { return nil }
-        let uri = "data:image/png;base64," + (data as Data).base64EncodedString()
-        return (uri, thumb.width, thumb.height)
+        let uri = "data:image/jpeg;base64," + (data as Data).base64EncodedString()
+        return (uri, w, h)
     }
 }

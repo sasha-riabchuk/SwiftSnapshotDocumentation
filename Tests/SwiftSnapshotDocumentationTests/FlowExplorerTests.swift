@@ -37,11 +37,12 @@ private func writeRealPNG(to url: URL, width: Int = 60, height: Int = 120) {
     // Each variant carries an embedded data-URI thumbnail (so the toolbar can re-skin
     // nodes and they render in canvas over file://).
     let variant = feature.screens.first?.variants.first
-    #expect(variant?.thumbnail.hasPrefix("data:image/png;base64,") == true)
+    #expect(variant?.thumbnail.hasPrefix("data:image/") == true)
+    #expect((variant?.width ?? 0) > 0 && (variant?.height ?? 0) > 0)
     // Variant panel images remain plain file references.
     #expect(variant?.image == "images/01-welcome-iPhone15Pro-light.png")
     // The screen's default thumbnail is the first variant's data URI.
-    #expect(feature.screens.first?.thumbnail.hasPrefix("data:image/png;base64,") == true)
+    #expect(feature.screens.first?.thumbnail.hasPrefix("data:image/") == true)
 }
 
 @Test func screenTransitionFactorySetsTargetAndLabel() {

@@ -72,7 +72,9 @@ private func screenStub(_ title: String, _ transitions: [ScreenTransition] = [])
 
 @Test func exportedFeatureStoresCounts() {
     let f = ExportedFeature(featurePath: "/x/Onboarding", screenCount: 3, edgeCount: 2, imageCount: 6, unresolvedTransitions: [])
+    #expect(f.featurePath == "/x/Onboarding")
     #expect(f.screenCount == 3)
     #expect(f.edgeCount == 2)
     #expect(f.imageCount == 6)
+    #expect(f.unresolvedTransitions.isEmpty)
 }

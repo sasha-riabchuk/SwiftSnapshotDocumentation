@@ -10,6 +10,7 @@ A library for generating beautiful DocC documentation from your SwiftUI screens 
 * [Example Output](#example-output)
 * [Examples](#examples)
 * [Basic Usage](#basic-usage)
+* [Using with AI coding agents](#using-with-ai-coding-agents)
 * [Documentation](#documentation)
 * [Installation](#installation)
 * [Requirements](#requirements)
@@ -248,6 +249,16 @@ regression snapshots in `__Snapshots__` are left bare; only the copies placed in
 the DocC catalog are framed. `organizeByDevice` groups those copies into
 per-device subfolders (`Resources/Snapshots/iPhone15Pro/…`); DocC still resolves
 the images by filename, so article links are unaffected.
+
+## Using with AI coding agents
+
+If you adopt this library with an AI agent (Claude Code, Cursor, Copilot, …):
+
+* [`AGENTS.md`](AGENTS.md) — a concise integration guide agents read automatically:
+  mental model, the canonical test, the run recipe, and a common-mistakes table.
+* [`Documentation/AgentSkill/`](Documentation/AgentSkill/) — a reusable Claude Code
+  **skill**. Copy the `swift-snapshot-documentation/` folder into your project's
+  `.claude/skills/` to give your agent on-demand, invokable guidance.
 
 ## Documentation
 

@@ -1,9 +1,8 @@
 # Swift Snapshot Documentation
 
-[![CI](https://img.shields.io/github/actions/workflow/status/yourusername/SwiftSnapshotDocumentation/ci.yml?branch=main)](https://github.com/yourusername/SwiftSnapshotDocumentation/actions)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fyourusername%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fyourusername%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation)
-[![License](https://img.shields.io/github/license/yourusername/SwiftSnapshotDocumentation)](https://github.com/yourusername/SwiftSnapshotDocumentation/blob/main/LICENSE)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsasha-riabchuk%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/sasha-riabchuk/SwiftSnapshotDocumentation)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsasha-riabchuk%2FSwiftSnapshotDocumentation%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/sasha-riabchuk/SwiftSnapshotDocumentation)
+[![License](https://img.shields.io/github/license/sasha-riabchuk/SwiftSnapshotDocumentation)](https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation/blob/main/LICENSE)
 
 A library for generating beautiful DocC documentation from your SwiftUI screens with automatic snapshot testing across devices and themes.
 
@@ -62,25 +61,7 @@ Each screen article includes:
 * **Rich documentation**: Full Markdown support with headings, lists, code blocks, and links
 * **DocC callouts**: Note, Important, Warning, and Tip callouts for additional context
 * **Navigation**: Links between screens to show user flow progression
-
-### Example Screenshots
-
-<div align="center">
-  <img src="Documentation/Images/xcode-docc-viewer.png" alt="DocC Viewer in Xcode" width="800">
-  <p><em>Documentation integrated in Xcode's Documentation Viewer</em></p>
-</div>
-
-<div align="center">
-  <img src="Documentation/Images/side-by-side-comparison.png" alt="Light and Dark Mode Comparison" width="800">
-  <p><em>Automatic side-by-side light/dark mode comparison</em></p>
-</div>
-
-<div align="center">
-  <img src="Documentation/Images/multiple-devices.png" alt="Multiple Device Sizes" width="800">
-  <p><em>Screenshots across different device sizes</em></p>
-</div>
-
-> **Note**: Add your own screenshots to the `Documentation/Images/` directory to showcase your library's capabilities.
+* **Device frames**: Each image is composited into a procedurally-drawn device bezel (with a Dynamic Island on notch iPhones)
 
 ## Examples
 
@@ -88,12 +69,15 @@ This repo comes with a comprehensive example demonstrating the library's capabil
 
 * [**Example Flow**](Tests/ExampleFlowDocumentationTests/): A complete onboarding flow documentation including welcome screens, login forms, and profile states across multiple devices and themes.
 
-Run the example to see the generated DocC catalog:
+Run the example to see the generated DocC catalog. Snapshot capture is iOS-only,
+so run the tests on an iOS simulator (a plain `swift test` on macOS will not build
+the example target, which references iOS-only device constants):
 
 ```sh
-cd SwiftSnapshotDocumentation
-swift test --filter ExampleFlowDocumentationTests
-open ExampleFlow.docc  # View in Xcode
+xcodebuild test \
+  -scheme SwiftSnapshotDocumentation \
+  -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  -only-testing:ExampleFlowDocumentationTests
 ```
 
 ## Basic Usage
@@ -152,10 +136,14 @@ final class OnboardingFlowDocumentation: XCTestCase {
 }
 ```
 
-Run the test to generate documentation:
+Run the test on an iOS simulator (snapshot capture is iOS-only). Set
+`RECORD_SNAPSHOTS` in the scheme/test-plan environment to (re)generate snapshots:
 
 ```sh
-swift test --filter OnboardingFlowDocumentation
+xcodebuild test \
+  -scheme YourAppScheme \
+  -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  -only-testing:YourAppTests/OnboardingFlowDocumentation
 ```
 
 This creates:
@@ -265,7 +253,7 @@ the images by filename, so article links are unaffected.
 
 The documentation for releases and `main` are available here:
 
-* [Swift Snapshot Documentation](https://swiftpackageindex.com/yourusername/SwiftSnapshotDocumentation/documentation)
+* [Swift Snapshot Documentation](https://swiftpackageindex.com/sasha-riabchuk/SwiftSnapshotDocumentation/documentation)
 
 <details>
   <summary>Other documentation</summary>
@@ -281,7 +269,7 @@ The documentation for releases and `main` are available here:
 You can add Swift Snapshot Documentation to an Xcode project by adding it as a package dependency:
 
 1. From the **File** menu, select **Add Package Dependencies...**
-2. Enter "https://github.com/yourusername/SwiftSnapshotDocumentation" into the package repository URL text field
+2. Enter "https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation" into the package repository URL text field
 3. Add the package to your test target
 
 ### Swift Package Manager
@@ -291,7 +279,7 @@ Add the package as a dependency in your `Package.swift` file:
 ```swift
 dependencies: [
     .package(
-        url: "https://github.com/yourusername/SwiftSnapshotDocumentation",
+        url: "https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation",
         from: "1.0.0"
     )
 ]
@@ -324,8 +312,8 @@ Swift Snapshot Documentation depends on:
 
 For discussions, questions, and announcements:
 
-* **GitHub Discussions**: [Discussions](https://github.com/yourusername/SwiftSnapshotDocumentation/discussions)
-* **Issue Tracker**: [Report bugs or request features](https://github.com/yourusername/SwiftSnapshotDocumentation/issues)
+* **GitHub Discussions**: [Discussions](https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation/discussions)
+* **Issue Tracker**: [Report bugs or request features](https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation/issues)
 
 ## License
 

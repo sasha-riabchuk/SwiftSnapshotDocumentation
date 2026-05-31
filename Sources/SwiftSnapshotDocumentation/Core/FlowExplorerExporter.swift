@@ -46,9 +46,11 @@ struct FlowExplorerExporter {
                     // can re-skin nodes (switch device/theme) and they render over file://
                     // (browsers block file:// images in canvas). The panel uses `image`
                     // (a file ref via DOM <img>). Falls back to the file path if encoding fails.
-                    let dataURI = Self.thumbnailDataURI(imagePath: destPath) ?? "images/\(cleaned)"
+                    let thumb = Self.thumbnail(imagePath: destPath)
                     variants.append(.init(device: device.name, theme: theme.name,
-                                          image: "images/\(cleaned)", thumbnail: dataURI))
+                                          image: "images/\(cleaned)",
+                                          thumbnail: thumb?.uri ?? "images/\(cleaned)",
+                                          width: thumb?.width ?? 0, height: thumb?.height ?? 0))
                 }
             }
             screenData.append(.init(
@@ -125,11 +127,12 @@ struct FlowExplorerExporter {
         return String(decoding: data, as: UTF8.self)
     }
 
-    /// Produces a downscaled PNG `data:` URI for the image at `imagePath`, suitable as a
-    /// Cytoscape node background that renders over `file://`. Uses an ImageIO thumbnail
-    /// (orientation-preserving) capped at `maxPixel`. Returns nil if the file isn't a
-    /// decodable image.
-    static func thumbnailDataURI(imagePath: String, maxPixel: Int = 240) -> String? {
+    /// Produces a downscaled PNG `data:` URI for the image at `imagePath` plus its pixel
+    /// dimensions — suitable as a Cytoscape node background that renders over `file://`
+    /// and lets the node size to the real aspect ratio. Uses an ImageIO thumbnail
+    /// (orientation-preserving) capped at `maxPixel` (≈2× the on-screen node size for
+    /// crisp retina rendering). Returns nil if the file isn't a decodable image.
+    static func thumbnail(imagePath: String, maxPixel: Int = 480) -> (uri: String, width: Int, height: Int)? {
         guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: imagePath) as CFURL, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -141,6 +144,7 @@ struct FlowExplorerExporter {
         guard let dest = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
         CGImageDestinationAddImage(dest, thumb, nil)
         guard CGImageDestinationFinalize(dest) else { return nil }
-        return "data:image/png;base64," + (data as Data).base64EncodedString()
+        let uri = "data:image/png;base64," + (data as Data).base64EncodedString()
+        return (uri, thumb.width, thumb.height)
     }
 }

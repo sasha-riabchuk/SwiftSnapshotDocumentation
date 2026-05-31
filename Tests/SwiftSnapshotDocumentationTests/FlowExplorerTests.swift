@@ -148,7 +148,7 @@ private func fxTempDir() throws -> URL {
         name: "Onboarding", summary: "s",
         screens: [.init(id: "welcome", title: "Welcome", description: "d",
                         thumbnail: "images/01-welcome-iPhone15Pro-light.png",
-                        variants: [.init(device: "iPhone15Pro", theme: "light", image: "images/01-welcome-iPhone15Pro-light.png", thumbnail: "data:image/png;base64,AA")],
+                        variants: [.init(device: "iPhone15Pro", theme: "light", image: "images/01-welcome-iPhone15Pro-light.png", thumbnail: "data:image/png;base64,AA", width: 100, height: 200)],
                         callouts: [.init(type: "tip", content: "hi")])],
         edges: [.init(from: "welcome", to: "login", label: "next")])
     let data = try FlowData.encoder.encode(feature)

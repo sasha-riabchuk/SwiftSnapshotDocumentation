@@ -28,6 +28,9 @@ enum FlowData {
         let image: String
         /// Embedded downscaled `data:` URI for the node canvas (renders over `file://`).
         let thumbnail: String
+        /// Pixel dimensions of the thumbnail, so the node can size to the real aspect ratio.
+        let width: Int
+        let height: Int
     }
     struct Callout: Codable, Equatable {
         let type: String

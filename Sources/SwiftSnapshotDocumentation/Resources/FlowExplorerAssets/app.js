@@ -15,16 +15,43 @@
     return (t.indexOf("data:") === 0 || t.indexOf("http") === 0) ? t : (dir + "/" + t);
   }
 
-  // Pick the thumbnail for a screen under the current device/theme selection, falling
-  // back to the closest available variant so a node never goes blank.
-  function thumbFor(sc) {
+  var NODE_MAX = 240; // largest node dimension (px); the other axis scales by aspect
+
+  // Pick the variant for a screen under the current device/theme selection, falling
+  // back to the closest available so a node never goes blank.
+  function variantFor(sc) {
     var vs = sc.variants || [];
     function pick(test) { for (var i = 0; i < vs.length; i++) if (test(vs[i])) return vs[i]; return null; }
-    var v = pick(function (x) { return familyOf(x.device) === state.device && x.theme === state.theme; })
-         || pick(function (x) { return familyOf(x.device) === state.device; })
-         || pick(function (x) { return x.theme === state.theme; })
-         || vs[0];
-    return v ? v.thumbnail : sc.thumbnail;
+    return pick(function (x) { return familyOf(x.device) === state.device && x.theme === state.theme; })
+        || pick(function (x) { return familyOf(x.device) === state.device; })
+        || pick(function (x) { return x.theme === state.theme; })
+        || vs[0] || null;
+  }
+
+  // Node size that reflects the image's real aspect ratio, normalized so the larger
+  // side is NODE_MAX (so a landscape iPad node is wide, a portrait iPhone node is tall).
+  function sizeFor(v) {
+    var w = (v && v.width) || 0, h = (v && v.height) || 0;
+    if (!w || !h) return { w: 110, h: NODE_MAX };
+    return h >= w
+      ? { w: Math.round(NODE_MAX * w / h), h: NODE_MAX }
+      : { w: NODE_MAX, h: Math.round(NODE_MAX * h / w) };
+  }
+
+  // Whether the screen actually has a variant for the selected device family (else the
+  // node is a fallback and is dimmed to make that obvious).
+  function hasFamily(sc) {
+    return (sc.variants || []).some(function (x) { return familyOf(x.device) === state.device; });
+  }
+
+  function nodeDataFor(sc, dir) {
+    var v = variantFor(sc);
+    var size = sizeFor(v);
+    return {
+      img: nodeImg(v ? v.thumbnail : sc.thumbnail, dir),
+      w: size.w, h: size.h,
+      op: hasFamily(sc) ? 1 : 0.35
+    };
   }
 
   function loadFeature(entry) {
@@ -43,7 +70,8 @@
 
     var elements = [];
     feature.screens.forEach(function (sc) {
-      elements.push({ data: { id: sc.id, label: sc.title, img: nodeImg(thumbFor(sc), dir), screen: sc } });
+      var nd = nodeDataFor(sc, dir);
+      elements.push({ data: { id: sc.id, label: sc.title, img: nd.img, w: nd.w, h: nd.h, op: nd.op, screen: sc } });
     });
     feature.edges.forEach(function (e) {
       elements.push({ data: { source: e.from, target: e.to, label: e.label || "" } });
@@ -55,8 +83,8 @@
       style: [
         { selector: "node", style: {
             "background-image": "data(img)", "background-fit": "contain", "background-opacity": 0,
-            "shape": "round-rectangle", "width": 120, "height": 240, "border-width": 1,
-            "border-color": "#ddd", "label": "data(label)", "text-valign": "bottom",
+            "shape": "round-rectangle", "width": "data(w)", "height": "data(h)", "opacity": "data(op)",
+            "border-width": 1, "border-color": "#ddd", "label": "data(label)", "text-valign": "bottom",
             "text-margin-y": 6, "font-size": 12 } },
         { selector: "edge", style: {
             "curve-style": "bezier", "target-arrow-shape": "triangle",
@@ -69,11 +97,15 @@
     cy.on("tap", "node", function (evt) { openPanel(evt.target.data("screen"), dir); });
   }
 
-  // Re-skin every node for the current state — Cytoscape re-renders the canvas because
-  // the node style binds background-image to data(img).
+  // Re-skin every node for the current state and re-run the layout (node sizes change
+  // with the device aspect ratio). Cytoscape re-renders the canvas from the new data.
   function reskin() {
     if (!cy) return;
-    cy.nodes().forEach(function (n) { n.data("img", nodeImg(thumbFor(n.data("screen")), currentDir)); });
+    cy.nodes().forEach(function (n) {
+      var nd = nodeDataFor(n.data("screen"), currentDir);
+      n.data("img", nd.img); n.data("w", nd.w); n.data("h", nd.h); n.data("op", nd.op);
+    });
+    cy.layout({ name: "dagre", rankDir: "TB", nodeSep: 40, rankSep: 70 }).run();
   }
 
   // MARK: toolbar

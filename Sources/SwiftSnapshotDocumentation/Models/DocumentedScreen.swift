@@ -67,6 +67,9 @@ public struct DocumentedScreen: Sendable {
     /// Optional callouts to include in the documentation.
     public let callouts: [Callout]
 
+    /// Outgoing transitions to other screens (used by the Flow Explorer).
+    public let transitions: [ScreenTransition]
+
     /// Creates a documented screen.
     ///
     /// - Parameters:
@@ -77,6 +80,7 @@ public struct DocumentedScreen: Sendable {
     ///   - devices: Devices to capture
     ///   - themes: Themes to capture
     ///   - callouts: Optional documentation callouts
+    ///   - transitions: Outgoing transitions to other screens (used by the Flow Explorer)
     public init(
         id: String? = nil,
         title: String,
@@ -84,7 +88,8 @@ public struct DocumentedScreen: Sendable {
         discussion: String? = nil,
         devices: [DeviceConfiguration],
         themes: [ThemeConfiguration],
-        callouts: [Callout] = []
+        callouts: [Callout] = [],
+        transitions: [ScreenTransition] = []
     ) {
         self.id = id ?? title.sanitizedForFilename()
         self.title = title
@@ -93,6 +98,7 @@ public struct DocumentedScreen: Sendable {
         self.devices = devices
         self.themes = themes
         self.callouts = callouts
+        self.transitions = transitions
     }
 
     /// A documentation callout that highlights important information.

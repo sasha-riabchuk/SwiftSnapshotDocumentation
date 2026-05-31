@@ -136,6 +136,7 @@ public final class DocumentedFlow {
     ///   - devices: Devices to capture
     ///   - themes: Themes to capture
     ///   - callouts: Optional documentation callouts
+    ///   - transitions: Outgoing transitions to other screens (used by the Flow Explorer)
     ///   - file: Source file (automatic)
     ///   - testName: Test function name (automatic)
     ///   - line: Source line (automatic)
@@ -147,6 +148,7 @@ public final class DocumentedFlow {
         devices: [DeviceConfiguration],
         themes: [ThemeConfiguration],
         callouts: [DocumentedScreen.Callout] = [],
+        transitions: [ScreenTransition] = [],
         file: StaticString = #file,
         testName: String = #function,
         line: UInt = #line
@@ -157,7 +159,8 @@ public final class DocumentedFlow {
             discussion: discussion,
             devices: devices,
             themes: themes,
-            callouts: callouts
+            callouts: callouts,
+            transitions: transitions
         )
 
         screens.append(screen)

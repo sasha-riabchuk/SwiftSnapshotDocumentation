@@ -87,19 +87,35 @@ public struct DeviceConfiguration: Sendable {
         frame: DeviceFrame(bezelFraction: 0.06, screenCornerFraction: 0.02, notch: .none)
     )
 
-    /// iPhone 15 Pro - 6.1" display, standard size.
+    /// iPhone 15 Pro - 6.1" display, 393×852 pt @3x.
     public static let iPhone15Pro = DeviceConfiguration(
         name: "iPhone15Pro",
-        viewImageConfig: .iPhone13Pro,  // Using closest available
+        viewImageConfig: makeViewImageConfig(base: .iPhone13Pro, width: 393, height: 852),
         frame: .phone
     )
 
-    /// iPhone 15 Pro Max - 6.7" display, large size.
+    /// iPhone 15 Pro Max - 6.7" display, 430×932 pt @3x.
     public static let iPhone15ProMax = DeviceConfiguration(
         name: "iPhone15ProMax",
-        viewImageConfig: .iPhone13ProMax,  // Using closest available
+        viewImageConfig: makeViewImageConfig(base: .iPhone13ProMax, width: 430, height: 932),
         frame: .phone
     )
+
+    /// Builds a `ViewImageConfig` for an iPhone with a Dynamic Island.
+    ///
+    /// swift-snapshot-testing doesn't ship an iPhone 15-series config, so we reuse
+    /// the matching 13-series trait collection (same size classes and `@3x` scale)
+    /// and override only the logical size and the taller Dynamic-Island safe area.
+    private static func makeViewImageConfig(
+        base: ViewImageConfig,
+        width: CGFloat,
+        height: CGFloat
+    ) -> ViewImageConfig {
+        var config = base
+        config.size = CGSize(width: width, height: height)
+        config.safeArea = UIEdgeInsets(top: 59, left: 0, bottom: 34, right: 0)
+        return config
+    }
 
     // MARK: - Predefined iPad Devices
 

@@ -301,4 +301,56 @@ final class ExampleFlowDocumentationTests: XCTestCase {
         let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
         print("🗂  iOS Components: \(exported.screenCount) screens at \(exported.featurePath)")
     }
+
+    /// Regression flow: documents the exact screens that the capture bugs produced blank,
+    /// so the suite verifies they keep rendering instead of asserting it only once.
+    ///
+    /// - `Layout-Driven Screen` — issue #2 (1.2.2): full-bleed, top-aligned, `.infinity`
+    ///   layout that collapsed to blank under the old view-only capture on iOS 26.
+    /// - `Entrance Animation` — (1.3.0): a screen revealed by `onAppear { withAnimation }`
+    ///   that captured as its hidden first frame. Rendered correctly here because the flow
+    ///   sets `captureSettleDuration` longer than the animation.
+    ///
+    /// If either regresses, the committed baselines won't match a blank capture and this
+    /// test fails. Recorded with `captureSettleDuration: 0.8`.
+    func testGenerateRegressionFlow() async throws {
+        let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
+
+        let flow = DocumentedFlow(
+            name: "Regression",
+            summary: "Screens that previously captured blank, now verified",
+            overview: """
+            Regression coverage for capture bugs this library has fixed: layout-driven
+            screens that collapsed on iOS 26 (issue #2), and entrance-animated screens
+            captured before their reveal completed. Both render here; the committed
+            baselines guard against either regressing back to blank.
+            """,
+            configuration: .init(captureSettleDuration: 0.8),
+            record: isRecording ? .record : .verify
+        )
+
+        await flow.addScreen(
+            title: "Layout-Driven Screen",
+            description: "Full-bleed gradient + top-aligned text + .infinity frame (issue #2)",
+            discussion: "Rendered blank under the old view-only capture on iOS 26; fixed in 1.2.2 by hosting in a UIHostingController.",
+            view: { LayoutDrivenRegressionView() },
+            devices: [.iPhone15Pro],
+            themes: [.light, .dark],
+            callouts: [.init(type: .note, content: "This layout collapsed to blank before 1.2.2")],
+            transitions: [.to("Entrance Animation")]
+        )
+
+        await flow.addScreen(
+            title: "Entrance Animation",
+            description: "Content revealed by onAppear { withAnimation } from opacity 0",
+            discussion: "A synchronous capture recorded the hidden first frame; captureSettleDuration (1.3.0) lets the reveal complete first.",
+            view: { EntranceAnimationRegressionView() },
+            devices: [.iPhone15Pro],
+            themes: [.light, .dark],
+            callouts: [.init(type: .tip, content: "Captured with captureSettleDuration: 0.8")]
+        )
+
+        let exported = try await flow.exportFlowExplorer(at: "FlowExplorer")
+        print("🗂  Regression: \(exported.screenCount) screens at \(exported.featurePath)")
+    }
 }

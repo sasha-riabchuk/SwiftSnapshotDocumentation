@@ -62,7 +62,7 @@ public final class DocumentedFlow {
     /// Configuration governing snapshot capture and documentation generation.
     ///
     /// The snapshot-comparison tolerances are read at capture time (when
-    /// ``addScreen(title:description:discussion:view:devices:themes:callouts:file:testName:line:)``
+    /// ``addScreen(title:description:discussion:view:devices:themes:callouts:transitions:file:testName:line:)``
     /// runs), which is why this is supplied here rather than only at generation time.
     public let configuration: DocumentationConfiguration
 

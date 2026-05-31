@@ -38,7 +38,7 @@ import Foundation
 /// - SeeAlso: ``DocumentedFlow``
 /// - SeeAlso: ``Callout``
 /// This type only describes a screen; it does not hold the SwiftUI view. The view
-/// is supplied to ``DocumentedFlow/addScreen(title:description:discussion:view:devices:themes:callouts:file:testName:line:)``
+/// is supplied to ``DocumentedFlow/addScreen(title:description:discussion:view:devices:themes:callouts:transitions:file:testName:line:)``
 /// and consumed immediately during snapshot capture, so the long-lived screen value
 /// stays a plain, `Sendable` metadata record rather than retaining a closure (and
 /// whatever state it captures) for the lifetime of the flow.

@@ -22,4 +22,5 @@ import Foundation
     )
     #expect(screen.transitions.count == 2)
     #expect(screen.transitions.first?.target == "Success")
+    #expect(screen.transitions.last?.target == "Error")
 }

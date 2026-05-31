@@ -66,6 +66,13 @@ public final class DocumentedFlow {
     /// runs), which is why this is supplied here rather than only at generation time.
     public let configuration: DocumentationConfiguration
 
+    /// How snapshots are treated while capturing screens.
+    ///
+    /// When `nil`, the ambient swift-snapshot-testing configuration is honored (e.g.
+    /// a `withSnapshotTesting(record:)` wrapper or test trait). When non-`nil`, each
+    /// capture is wrapped to use this mode explicitly. See ``SnapshotRecordMode``.
+    public let record: SnapshotRecordMode?
+
     /// The screens that make up this flow.
     private(set) var screens: [DocumentedScreen] = []
 
@@ -85,16 +92,22 @@ public final class DocumentedFlow {
     ///   - configuration: Options for snapshot capture (tolerances, image format)
     ///     and documentation generation. The comparison tolerances take effect as
     ///     screens are captured.
+    ///   - record: How snapshots are treated while capturing. Defaults to `nil`,
+    ///     which honors the ambient swift-snapshot-testing configuration. Pass
+    ///     ``SnapshotRecordMode/verify`` to gate regressions or
+    ///     ``SnapshotRecordMode/record`` to (re)generate baselines.
     public init(
         name: String,
         summary: String,
         overview: String = "",
-        configuration: DocumentationConfiguration = .init()
+        configuration: DocumentationConfiguration = .init(),
+        record: SnapshotRecordMode? = nil
     ) {
         self.name = name
         self.summary = summary
         self.overview = overview
         self.configuration = configuration
+        self.record = record
     }
 
     /// Adds a screen to the flow and captures snapshots.
@@ -200,19 +213,29 @@ public final class DocumentedFlow {
                                   device.name,
                                   theme.name)
 
-        assertSnapshot(
-            of: view,
-            as: .image(
-                precision: configuration.snapshotPrecision,
-                perceptualPrecision: configuration.snapshotPerceptualPrecision,
-                layout: .device(config: device.viewImageConfig),
-                traits: .init(userInterfaceStyle: theme.colorScheme == .dark ? .dark : .light)
-            ),
-            named: snapshotName,
-            file: file,
-            testName: testName,
-            line: line
-        )
+        let capture = {
+            assertSnapshot(
+                of: view,
+                as: .image(
+                    precision: self.configuration.snapshotPrecision,
+                    perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
+                    layout: .device(config: device.viewImageConfig),
+                    traits: .init(userInterfaceStyle: theme.colorScheme == .dark ? .dark : .light)
+                ),
+                named: snapshotName,
+                file: file,
+                testName: testName,
+                line: line
+            )
+        }
+
+        // Apply the flow's record mode explicitly when set; otherwise honor whatever
+        // ambient swift-snapshot-testing configuration is in effect.
+        if let record {
+            withSnapshotTesting(record: record.configuration, operation: capture)
+        } else {
+            capture()
+        }
         #else
         // Snapshot testing for SwiftUI views is iOS-only
         print("⚠️  Snapshot testing is only supported on iOS")

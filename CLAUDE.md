@@ -28,11 +28,12 @@ Note: `swift test` on the Mac does **not even build** — `ExampleFlowDocumentat
 
 ## Recording vs. verifying
 
-Snapshots have two modes, toggled by `isRecording` (set in the test's `setUp`):
-- `isRecording = true` — captures/overwrites snapshot PNGs (needed to regenerate docs). The example test and README examples ship with this **on**.
-- `isRecording = false` — compares against committed snapshots and fails on diff (CI/regression mode).
+The mode is an explicit, first-class `DocumentedFlow` concern via `record: SnapshotRecordMode?` — it is **not** the deprecated global `isRecording`. `captureSnapshot` wraps each `assertSnapshot` in `withSnapshotTesting(record:)` when a mode is set (`nil` honors the ambient config). Mapping in `SnapshotRecordMode.configuration`: `.record → .all`, `.recordMissing → .missing`, `.verify → .never`.
 
-Snapshots land in `__Snapshots__/<TestClass>/` next to the test file (created by swift-snapshot-testing), with filenames prefixed by the test function name.
+- `.verify` (CI/regression gate) — compares against committed snapshots; **fails on any drift**. The example defaults to this, so the documentation test now actually asserts.
+- `.record` (run locally) — (re)writes snapshots; reports a failure per snapshot by design (swift-snapshot-testing always "fails" while recording). Commit snapshots + regenerated catalog together.
+
+The example gates the mode on a `RECORD_SNAPSHOTS` env var. Note: a plain shell env var on the `xcodebuild` command line does **not** reach the simulator test process — set it in the scheme/test-plan environment. Snapshots land in `__Snapshots__/<TestFileBasename>/` next to the test file, filenames prefixed `<sanitizedTestName>.`.
 
 ## Architecture
 

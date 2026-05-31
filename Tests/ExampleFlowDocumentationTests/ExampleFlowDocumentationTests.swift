@@ -16,10 +16,11 @@ import SwiftSnapshotDocumentationExamples
 ///
 /// ## Usage
 ///
-/// 1. Set `isRecording = true` to generate/update snapshots
-/// 2. Run the test
-/// 3. Check the generated `ExampleFlow.docc` catalog
-/// 4. View in Xcode's documentation viewer or build with `docc`
+/// 1. By default the test verifies against committed snapshots (regression gate).
+/// 2. To (re)generate snapshots, set the `RECORD_SNAPSHOTS` scheme environment
+///    variable so the flow uses ``SnapshotRecordMode/record``, then re-run.
+/// 3. Check the generated `ExampleFlow.docc` catalog.
+/// 4. View in Xcode's documentation viewer or build with `docc`.
 ///
 /// ## Generated Output
 ///
@@ -30,15 +31,18 @@ import SwiftSnapshotDocumentationExamples
 @MainActor
 final class ExampleFlowDocumentationTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-
-        // IMPORTANT: Set to true to generate/update snapshots
-        // Set to false to verify snapshots match
-        isRecording = true
-    }
-
     func testGenerateExampleFlowDocumentation() async throws {
+        // Recording is opt-in. By default the flow VERIFIES against committed
+        // snapshots, so this test gates UI regressions (it fails if a screen
+        // changed). To regenerate the baselines + catalog, set the RECORD_SNAPSHOTS
+        // environment variable, then commit the result. Recording runs intentionally
+        // report a failure to remind you to review and re-run.
+        //
+        // Set RECORD_SNAPSHOTS in the test's scheme/test-plan environment (a plain
+        // shell variable passed to `xcodebuild` does not reach the simulator test
+        // process). Recording reports a failure for each snapshot by design.
+        let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
+
         // Create the documented flow
         let flow = DocumentedFlow(
             name: "ExampleFlow",
@@ -60,7 +64,8 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             - Documentation with callouts
 
             > Note: This is a demonstration flow showing the package capabilities.
-            """
+            """,
+            record: isRecording ? .record : .verify
         )
 
         // MARK: - Step 1: Welcome Screen

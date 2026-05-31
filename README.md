@@ -109,12 +109,10 @@ import SwiftSnapshotDocumentation
 
 @MainActor
 final class OnboardingFlowDocumentation: XCTestCase {
-    override func setUp() {
-        super.setUp()
-        isRecording = true  // Set to true to generate/update snapshots
-    }
-
     func testGenerateOnboardingDocs() async throws {
+        // Verify by default (regression gate); record only when explicitly asked.
+        let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
+
         // Define the flow
         let flow = DocumentedFlow(
             name: "Onboarding",
@@ -122,7 +120,8 @@ final class OnboardingFlowDocumentation: XCTestCase {
             overview: """
             Complete onboarding flow from welcome screen to authenticated dashboard.
             This flow introduces new users to the app and guides them through account creation.
-            """
+            """,
+            record: isRecording ? .record : .verify
         )
 
         // Document each screen
@@ -164,6 +163,24 @@ This creates:
 - `__Snapshots__/` - Snapshot images referenced in the documentation
 
 View the documentation in Xcode by opening `Documentation.docc` or building documentation with Product → Build Documentation (⌃⇧⌘D).
+
+### Recording vs. verifying
+
+A documentation flow does double duty, so the `record:` mode makes the intent explicit:
+
+* **`.verify`** (use on CI) — compares each screen against the committed snapshots and **fails on any difference**. This is what turns the documentation test into a UI regression gate. Run `generateDocumentation` afterwards to rebuild the catalog from the verified images.
+* **`.record`** (run locally) — (re)writes every snapshot, then regenerates the catalog. Commit the updated snapshots together with the catalog. Recording always reports a test failure by design, to remind you to review and re-run.
+* **`.recordMissing`** — records only snapshots that don't exist yet and verifies the rest; handy when adding a new screen without disturbing existing baselines.
+
+When `record:` is omitted, the ambient swift-snapshot-testing configuration is honored. Gate the choice behind an environment variable (set it in the scheme/test-plan environment so it reaches the simulator test process) so the same test verifies on CI and records on demand:
+
+```swift
+let flow = DocumentedFlow(
+    name: "Onboarding",
+    summary: "…",
+    record: ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil ? .record : .verify
+)
+```
 
 ### Documenting Multiple View States
 

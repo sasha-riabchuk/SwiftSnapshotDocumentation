@@ -16,7 +16,16 @@ import Foundation
 import SwiftUI
 import CoreGraphics
 import ImageIO
+import SnapshotTesting
 @testable import SwiftSnapshotDocumentation
+
+// MARK: - Record mode maps to swift-snapshot-testing
+
+@Test func recordModeMapsToSnapshotTestingRecord() {
+    #expect(SnapshotRecordMode.record.configuration == .all)
+    #expect(SnapshotRecordMode.recordMissing.configuration == .missing)
+    #expect(SnapshotRecordMode.verify.configuration == .never)
+}
 
 // MARK: - Helpers
 

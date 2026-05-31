@@ -114,3 +114,44 @@ private func fxTempDir() throws -> URL {
     #expect(decoded == feature)
     #expect(decoded.screens.first?.thumbnail == "images/01-welcome-iPhone15Pro-light.png")
 }
+
+private func fxDevice(_ name: String) -> DeviceConfiguration {
+    #if os(iOS)
+    return DeviceConfiguration(name: name, viewImageConfig: .iPhone13Pro)
+    #else
+    return DeviceConfiguration(name: name, viewImageConfig: 0)
+    #endif
+}
+
+@MainActor
+@Test func exporterWritesFeatureArtifactsAndManifest() throws {
+    let root = try fxTempDir(); defer { try? FileManager.default.removeItem(at: root) }
+    let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
+    try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+    try Data([0x89]).write(to: source.appendingPathComponent("t.01-welcome-iPhone15Pro-light.png"))
+
+    let flow = DocumentedFlow(name: "Onboarding", summary: "s")
+    let screens = [
+        DocumentedScreen(title: "Welcome", description: "d", devices: [fxDevice("iPhone15Pro")], themes: [.light],
+                         transitions: [.to("Login")]),
+        DocumentedScreen(title: "Login", description: "d", devices: [fxDevice("iPhone15Pro")], themes: [.light]),
+    ]
+    let exporter = FlowExplorerExporter(flow: flow, screens: screens,
+                                        snapshotSourcePath: source.path,
+                                        configuration: .init(deviceFrames: false))
+    let result = try exporter.export(at: root.appendingPathComponent("FlowExplorer").path)
+
+    #expect(result.screenCount == 2)
+    #expect(result.edgeCount == 1)
+    let featureDir = root.appendingPathComponent("FlowExplorer/Onboarding")
+    #expect(FileManager.default.fileExists(atPath: featureDir.appendingPathComponent("feature.json").path))
+    #expect(FileManager.default.fileExists(atPath: featureDir.appendingPathComponent("flows.js").path))
+    #expect(FileManager.default.fileExists(atPath: featureDir.appendingPathComponent("images/01-welcome-iPhone15Pro-light.png").path))
+
+    let json = try Data(contentsOf: featureDir.appendingPathComponent("feature.json"))
+    let feature = try JSONDecoder().decode(FlowData.Feature.self, from: json)
+    #expect(feature.screens.first?.thumbnail == "images/01-welcome-iPhone15Pro-light.png")
+    #expect(feature.edges == [.init(from: "welcome", to: "login", label: nil)])
+
+    #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("FlowExplorer/manifest.js").path))
+}

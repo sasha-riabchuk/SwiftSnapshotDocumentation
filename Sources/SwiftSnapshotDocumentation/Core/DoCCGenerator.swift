@@ -270,11 +270,17 @@ final class DoCCGenerator {
         let (sourcePath, searched) = SnapshotImageCopier.resolveSourceDirectory(provided: snapshotSourcePath, fileManager: fileManager)
         guard let sourcePath else { throw DocumentationError.snapshotsNotFound(searchedPaths: searched) }
 
-        let index = try SnapshotImageCopier.index(at: sourcePath, fileManager: fileManager)
+        let snapshotIndex = try SnapshotImageCopier.index(at: sourcePath, fileManager: fileManager)
         var copied = 0
-        for (cleanedName, sourceFilePath) in index {
+        // Copy order is irrelevant — DocC resolves images by filename.
+        for (cleanedName, sourceFilePath) in snapshotIndex {
             let device = device(forImageName: cleanedName)
-            let subdir = (configuration.organizeByDevice && device != nil) ? "/\(device!.name)" : ""
+            let subdir: String
+            if configuration.organizeByDevice, let device {
+                subdir = "/\(device.name)"
+            } else {
+                subdir = ""
+            }
             let destPath = "\(destinationPath)\(subdir)/\(cleanedName)"
             let frame = (configuration.deviceFrames ? device?.frame : nil)
             try SnapshotImageCopier.copyImage(from: sourceFilePath, to: destPath, frame: frame)

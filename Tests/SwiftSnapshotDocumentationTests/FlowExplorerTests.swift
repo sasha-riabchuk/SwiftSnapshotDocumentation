@@ -98,4 +98,5 @@ private func fxTempDir() throws -> URL {
     let dest = dir.appendingPathComponent("out/a.png")
     try SnapshotImageCopier.copyImage(from: src.path, to: dest.path, frame: nil)
     #expect(FileManager.default.fileExists(atPath: dest.path))
+    #expect((try? Data(contentsOf: dest)) == Data([0x89, 0x50]))
 }

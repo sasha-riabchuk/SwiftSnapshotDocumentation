@@ -6,7 +6,7 @@
 import Foundation
 
 /// Locates and copies snapshot images, optionally compositing a device frame.
-/// Shared by ``DoCCGenerator`` and ``FlowExplorerExporter``.
+/// Shared by ``DoCCGenerator`` and the Flow Explorer exporter.
 enum SnapshotImageCopier {
     /// Removes the leading `<testName>.` prefix swift-snapshot-testing prepends,
     /// anchored on the `NN-` identifier so it works for any test-name length.
@@ -54,6 +54,7 @@ enum SnapshotImageCopier {
                 if isDir.boolValue {
                     try walk(itemPath)
                 } else if item.hasSuffix(".png") || item.hasSuffix(".jpg") {
+                    // Last writer wins if two files strip to the same cleaned name.
                     result[strippedSnapshotName(item)] = itemPath
                 }
             }

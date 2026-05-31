@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import ImageIO
 
 /// Builds a feature's Flow Explorer data + images and updates the shared manifest.
 @MainActor
@@ -31,6 +32,7 @@ struct FlowExplorerExporter {
         var screenData: [FlowData.Screen] = []
         for (i, screen) in screens.enumerated() {
             var variants: [FlowData.Variant] = []
+            var thumbnail: String?
             for device in screen.devices {
                 for theme in screen.themes {
                     let cleaned = String(format: "%02d-%@-%@-%@.%@",
@@ -38,14 +40,22 @@ struct FlowExplorerExporter {
                                          configuration.imageFormat.rawValue)
                     guard let sourceFile = index[cleaned] else { continue }
                     let frame = configuration.deviceFrames ? device.frame : nil
-                    try SnapshotImageCopier.copyImage(from: sourceFile, to: "\(imagesDir)/\(cleaned)", frame: frame)
+                    let destPath = "\(imagesDir)/\(cleaned)"
+                    try SnapshotImageCopier.copyImage(from: sourceFile, to: destPath, frame: frame)
                     imageCount += 1
                     variants.append(.init(device: device.name, theme: theme.name, image: "images/\(cleaned)"))
+                    // The node thumbnail is an embedded data URI so it renders in the
+                    // Cytoscape canvas even over file:// (browsers block file:// images
+                    // from canvas). Variant panel images stay as file refs (DOM <img>
+                    // loads those fine). Falls back to the file path if encoding fails.
+                    if thumbnail == nil {
+                        thumbnail = Self.thumbnailDataURI(imagePath: destPath) ?? "images/\(cleaned)"
+                    }
                 }
             }
             screenData.append(.init(
                 id: screen.id, title: screen.title, description: screen.description,
-                thumbnail: variants.first?.image ?? "",
+                thumbnail: thumbnail ?? "",
                 variants: variants,
                 callouts: screen.callouts.map { .init(type: $0.type.rawValue, content: $0.content) }
             ))
@@ -115,5 +125,24 @@ struct FlowExplorerExporter {
     private func stringLiteral(_ s: String) -> String {
         let data = (try? JSONEncoder().encode(s)) ?? Data("\"\"".utf8)
         return String(decoding: data, as: UTF8.self)
+    }
+
+    /// Produces a downscaled PNG `data:` URI for the image at `imagePath`, suitable as a
+    /// Cytoscape node background that renders over `file://`. Uses an ImageIO thumbnail
+    /// (orientation-preserving) capped at `maxPixel`. Returns nil if the file isn't a
+    /// decodable image.
+    static func thumbnailDataURI(imagePath: String, maxPixel: Int = 240) -> String? {
+        guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: imagePath) as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixel,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        guard let thumb = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        let data = NSMutableData()
+        guard let dest = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(dest, thumb, nil)
+        guard CGImageDestinationFinalize(dest) else { return nil }
+        return "data:image/png;base64," + (data as Data).base64EncodedString()
     }
 }

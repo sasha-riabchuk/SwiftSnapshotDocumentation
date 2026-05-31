@@ -1,6 +1,44 @@
 import Testing
 import Foundation
+import CoreGraphics
+import ImageIO
 @testable import SwiftSnapshotDocumentation
+
+/// Writes a small valid PNG so thumbnail/data-URI generation has a real image to decode.
+private func writeRealPNG(to url: URL, width: Int = 60, height: Int = 120) {
+    let ctx = CGContext(
+        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )!
+    ctx.setFillColor(CGColor(red: 0.2, green: 0.5, blue: 1, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+    let image = ctx.makeImage()!
+    let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil)!
+    CGImageDestinationAddImage(dest, image, nil)
+    _ = CGImageDestinationFinalize(dest)
+}
+
+@MainActor
+@Test func exporterEmbedsThumbnailAsDataURI() throws {
+    let root = try fxTempDir(); defer { try? FileManager.default.removeItem(at: root) }
+    let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
+    try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+    writeRealPNG(to: source.appendingPathComponent("t.01-welcome-iPhone15Pro-light.png"))
+
+    let flow = DocumentedFlow(name: "Onboarding", summary: "s")
+    let screens = [DocumentedScreen(title: "Welcome", description: "d", devices: [fxDevice("iPhone15Pro")], themes: [.light])]
+    let exporter = FlowExplorerExporter(flow: flow, screens: screens,
+                                        snapshotSourcePath: source.path,
+                                        configuration: .init(deviceFrames: false))
+    _ = try exporter.export(at: root.appendingPathComponent("FlowExplorer").path)
+
+    let json = try Data(contentsOf: root.appendingPathComponent("FlowExplorer/Onboarding/feature.json"))
+    let feature = try JSONDecoder().decode(FlowData.Feature.self, from: json)
+    // Node thumbnail is an embedded data URI (so it renders in canvas over file://).
+    #expect(feature.screens.first?.thumbnail.hasPrefix("data:image/png;base64,") == true)
+    // Variant panel images remain plain file references.
+    #expect(feature.screens.first?.variants.first?.image == "images/01-welcome-iPhone15Pro-light.png")
+}
 
 @Test func screenTransitionFactorySetsTargetAndLabel() {
     let t1 = ScreenTransition.to("Success", on: "valid")

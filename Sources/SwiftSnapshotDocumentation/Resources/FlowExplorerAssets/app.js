@@ -15,7 +15,11 @@
     closePanel();
     var elements = [];
     feature.screens.forEach(function (sc) {
-      elements.push({ data: { id: sc.id, label: sc.title, img: dir + "/" + sc.thumbnail, screen: sc, dir: dir } });
+      // Thumbnail is usually an embedded data: URI (renders in canvas over file://);
+      // fall back to a relative file path for any non-embedded value.
+      var t = sc.thumbnail || "";
+      var img = (t.indexOf("data:") === 0 || t.indexOf("http") === 0) ? t : (dir + "/" + t);
+      elements.push({ data: { id: sc.id, label: sc.title, img: img, screen: sc, dir: dir } });
     });
     feature.edges.forEach(function (e) {
       elements.push({ data: { source: e.from, target: e.to, label: e.label || "" } });

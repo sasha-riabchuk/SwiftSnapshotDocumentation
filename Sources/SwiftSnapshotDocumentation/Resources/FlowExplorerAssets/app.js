@@ -80,21 +80,29 @@
     cy = cytoscape({
       container: document.getElementById("cy"),
       elements: elements,
+      autoungrabify: true, boxSelectionEnabled: false, minZoom: 0.2, maxZoom: 3,
       style: [
         { selector: "node", style: {
             "background-image": "data(img)", "background-fit": "contain", "background-opacity": 0,
             "shape": "round-rectangle", "width": "data(w)", "height": "data(h)", "opacity": "data(op)",
-            "border-width": 1, "border-color": "#ddd", "label": "data(label)", "text-valign": "bottom",
-            "text-margin-y": 6, "font-size": 12 } },
+            "border-width": 1, "border-color": "#e4e4e7",
+            "label": "data(label)", "text-valign": "top", "text-halign": "center", "text-margin-y": -9,
+            "font-size": 12, "font-weight": 600, "color": "#3f3f46" } },
+        { selector: "node:selected", style: { "border-width": 2, "border-color": "#0d99ff", "color": "#0d99ff" } },
         { selector: "edge", style: {
-            "curve-style": "bezier", "target-arrow-shape": "triangle",
-            "line-color": "#bbb", "target-arrow-color": "#bbb", "width": 2,
-            "label": "data(label)", "font-size": 10, "color": "#666",
-            "text-background-color": "#fff", "text-background-opacity": 1 } }
+            "curve-style": "bezier", "target-arrow-shape": "triangle", "arrow-scale": 1.1,
+            "line-color": "#cfcfd6", "target-arrow-color": "#cfcfd6", "width": 1.5,
+            "label": "data(label)", "font-size": 10, "font-weight": 500, "color": "#71717a",
+            "text-background-color": "#ffffff", "text-background-opacity": 1,
+            "text-background-padding": 4, "text-background-shape": "round-rectangle",
+            "text-border-color": "#e6e6e9", "text-border-width": 1, "text-border-opacity": 1 } },
+        { selector: "edge:selected", style: { "line-color": "#0d99ff", "target-arrow-color": "#0d99ff" } }
       ],
-      layout: { name: "dagre", rankDir: "TB", nodeSep: 40, rankSep: 70 }
+      layout: { name: "dagre", rankDir: "TB", nodeSep: 55, rankSep: 80 }
     });
     cy.on("tap", "node", function (evt) { openPanel(evt.target.data("screen"), dir); });
+    cy.on("tap", function (evt) { if (evt.target === cy) { closePanel(); cy.elements().unselect(); } });
+    buildZoombar();
   }
 
   // Re-skin every node for the current state and re-run the layout (node sizes change
@@ -158,17 +166,36 @@
   // MARK: variants panel
 
   function openPanel(screen, dir) {
-    var body = document.getElementById("panel-body");
-    var html = "<h2>" + escapeHtml(screen.title) + "</h2><p>" + escapeHtml(screen.description) + "</p>";
+    document.getElementById("ptitle").textContent = screen.title;
+    document.getElementById("pdesc").textContent = screen.description || "";
+    var html = "";
     (screen.callouts || []).forEach(function (c) {
-      html += "<p><strong>" + escapeHtml(c.type) + ":</strong> " + escapeHtml(c.content) + "</p>";
+      html += '<div class="callout"><strong>' + escapeHtml(c.type) + ":</strong> " + escapeHtml(c.content) + "</div>";
     });
     screen.variants.forEach(function (v) {
       html += '<div class="variant-label">' + escapeHtml(v.device + " · " + v.theme) + "</div>";
       html += '<img src="' + dir + "/" + v.image + '" alt="" />';
     });
-    body.innerHTML = html;
+    document.getElementById("panel-body").innerHTML = html;
     document.getElementById("panel").classList.add("open");
+  }
+
+  // Zoom control (bottom-left): − / % / + ; clicking the % fits to screen.
+  function buildZoombar() {
+    var z = document.getElementById("zoombar");
+    z.innerHTML = "";
+    function btn(txt, fn) { var b = document.createElement("button"); b.textContent = txt; b.onclick = fn; return b; }
+    function zoomBy(f) {
+      cy.zoom({ level: Math.min(cy.maxZoom(), Math.max(cy.minZoom(), cy.zoom() * f)),
+                renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+    }
+    var pct = document.createElement("span"); pct.id = "zoompct"; pct.title = "Fit to screen";
+    pct.onclick = function () { cy.fit(undefined, 48); };
+    z.appendChild(btn("−", function () { zoomBy(0.8); }));
+    z.appendChild(pct);
+    z.appendChild(btn("+", function () { zoomBy(1.25); }));
+    function upd() { pct.textContent = Math.round(cy.zoom() * 100) + "%"; }
+    cy.on("zoom", upd); upd();
   }
 
   window.closePanel = function () { document.getElementById("panel").classList.remove("open"); };

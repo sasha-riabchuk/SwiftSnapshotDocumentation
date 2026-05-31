@@ -117,3 +117,30 @@ public struct DocumentationConfiguration: Sendable {
         self.organizeByDevice = organizeByDevice
     }
 }
+
+// MARK: - Snapshot comparison mapping
+
+extension DocumentationConfiguration {
+    /// The `precision` value passed to swift-snapshot-testing's `.image` strategy:
+    /// the fraction of pixels that must match, i.e. `1 - overallTolerance`.
+    ///
+    /// Clamped to `0...1`.
+    var snapshotPrecision: Float {
+        (1 - overallTolerance).clampedToUnitInterval
+    }
+
+    /// The `perceptualPrecision` value passed to swift-snapshot-testing's `.image`
+    /// strategy: how closely each individual pixel must match, i.e.
+    /// `1 - perPixelTolerance`.
+    ///
+    /// Clamped to `0...1`.
+    var snapshotPerceptualPrecision: Float {
+        (1 - perPixelTolerance).clampedToUnitInterval
+    }
+}
+
+private extension Float {
+    var clampedToUnitInterval: Float {
+        Swift.min(1, Swift.max(0, self))
+    }
+}

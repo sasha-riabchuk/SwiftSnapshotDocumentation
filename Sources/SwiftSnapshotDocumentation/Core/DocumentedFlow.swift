@@ -59,6 +59,13 @@ public final class DocumentedFlow {
     /// Extended overview in Markdown format.
     public let overview: String
 
+    /// Configuration governing snapshot capture and documentation generation.
+    ///
+    /// The snapshot-comparison tolerances are read at capture time (when
+    /// ``addScreen(title:description:discussion:view:devices:themes:callouts:file:testName:line:)``
+    /// runs), which is why this is supplied here rather than only at generation time.
+    public let configuration: DocumentationConfiguration
+
     /// The screens that make up this flow.
     private(set) var screens: [DocumentedScreen] = []
 
@@ -75,10 +82,19 @@ public final class DocumentedFlow {
     ///   - name: The flow name (e.g., "Onboarding", "Checkout")
     ///   - summary: Brief one-line summary
     ///   - overview: Extended Markdown overview (optional)
-    public init(name: String, summary: String, overview: String = "") {
+    ///   - configuration: Options for snapshot capture (tolerances, image format)
+    ///     and documentation generation. The comparison tolerances take effect as
+    ///     screens are captured.
+    public init(
+        name: String,
+        summary: String,
+        overview: String = "",
+        configuration: DocumentationConfiguration = .init()
+    ) {
         self.name = name
         self.summary = summary
         self.overview = overview
+        self.configuration = configuration
     }
 
     /// Adds a screen to the flow and captures snapshots.
@@ -187,6 +203,8 @@ public final class DocumentedFlow {
         assertSnapshot(
             of: view,
             as: .image(
+                precision: configuration.snapshotPrecision,
+                perceptualPrecision: configuration.snapshotPerceptualPrecision,
                 layout: .device(config: device.viewImageConfig),
                 traits: .init(userInterfaceStyle: theme.colorScheme == .dark ? .dark : .light)
             ),
@@ -224,19 +242,23 @@ public final class DocumentedFlow {
     /// - Parameters:
     ///   - outputPath: Path where DocC catalog should be created
     ///   - snapshotSourcePath: Optional path to __Snapshots__ directory (auto-detected if nil)
-    ///   - configuration: Documentation generation options
+    ///   - configuration: Documentation generation options. Defaults to the
+    ///     configuration supplied at the flow's initialization. Note that snapshot
+    ///     comparison tolerances are applied at capture time, so overriding them
+    ///     here has no effect on already-captured snapshots.
     ///
-    /// - Throws: File system errors if documentation cannot be written
+    /// - Throws: ``DocumentationError`` if no snapshots are found, or file system
+    ///   errors if documentation cannot be written.
     public func generateDocumentation(
         outputPath: String,
         snapshotSourcePath: String? = nil,
-        configuration: DocumentationConfiguration = .init()
+        configuration: DocumentationConfiguration? = nil
     ) async throws {
         let generator = DoCCGenerator(
             flow: self,
             screens: screens,
             snapshotSourcePath: snapshotSourcePath ?? resolvedSnapshotDirectory,
-            configuration: configuration
+            configuration: configuration ?? self.configuration
         )
 
         try await generator.generate(at: outputPath)

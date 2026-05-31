@@ -58,6 +58,25 @@ private func writeDummyImage(named name: String, in directory: URL) throws {
     try Data([0x89, 0x50, 0x4E, 0x47]).write(to: directory.appendingPathComponent(name))
 }
 
+// MARK: - Tolerances map to swift-snapshot-testing precision values
+
+@Test func tolerancesMapToSnapshotPrecision() {
+    let config = DocumentationConfiguration(perPixelTolerance: 0.01, overallTolerance: 0.05)
+    // precision = 1 - overallTolerance, perceptualPrecision = 1 - perPixelTolerance
+    #expect(abs(config.snapshotPrecision - 0.95) < 1e-6)
+    #expect(abs(config.snapshotPerceptualPrecision - 0.99) < 1e-6)
+}
+
+@Test func toleranceMappingClampsToUnitInterval() {
+    let tooLoose = DocumentationConfiguration(perPixelTolerance: 2, overallTolerance: 2)
+    #expect(tooLoose.snapshotPrecision == 0)
+    #expect(tooLoose.snapshotPerceptualPrecision == 0)
+
+    let negative = DocumentationConfiguration(perPixelTolerance: -1, overallTolerance: -1)
+    #expect(negative.snapshotPrecision == 1)
+    #expect(negative.snapshotPerceptualPrecision == 1)
+}
+
 // MARK: - Fix #1: deterministic snapshot directory derivation
 
 @Test func snapshotDirectoryMatchesSnapshotTestingLayout() {

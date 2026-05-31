@@ -212,17 +212,27 @@ Customize the generated documentation with `DocumentationConfiguration`:
 let config = DocumentationConfiguration(
     imageFormat: .png,              // Image format (.png or .jpeg)
     deviceFrames: true,             // Include device bezels in screenshots
-    perPixelTolerance: 0.01,        // Snapshot comparison tolerance
-    overallTolerance: 0.05,
+    perPixelTolerance: 0.01,        // Per-pixel comparison tolerance
+    overallTolerance: 0.05,         // Fraction of pixels allowed to differ
     createIndexPage: true,          // Generate index page
     organizeByDevice: false         // Group images by device
 )
 
-try await flow.generateDocumentation(
-    outputPath: "Documentation.docc",
+// Pass the configuration at flow creation so the comparison tolerances take
+// effect while snapshots are captured.
+let flow = DocumentedFlow(
+    name: "Onboarding",
+    summary: "New user onboarding experience",
     configuration: config
 )
 ```
+
+The tolerances are mapped onto swift-snapshot-testing's `.image` strategy:
+`overallTolerance` becomes `precision` (`1 - overallTolerance`, the fraction of
+pixels that must match) and `perPixelTolerance` becomes `perceptualPrecision`
+(`1 - perPixelTolerance`, how closely each pixel must match). Because snapshots
+are compared as they are captured, the configuration must be supplied to
+`DocumentedFlow` rather than only to `generateDocumentation`.
 
 ## Documentation
 

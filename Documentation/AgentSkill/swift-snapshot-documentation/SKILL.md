@@ -70,8 +70,10 @@ different `view:` and a distinct `title:` (e.g. "Profile — Empty", "Profile �
   existing ones. Omit to honor the ambient snapshot-testing config.
 - **`DocumentationConfiguration`** (pass to `DocumentedFlow(configuration:)`):
   `deviceFrames` (default on — composites a device bezel), `organizeByDevice`,
-  `includeFlowDiagram`, `createIndexPage`, image format, and comparison tolerances
-  (`perPixelTolerance`/`overallTolerance`, applied at capture time).
+  `includeFlowDiagram`, `createIndexPage`, image format, comparison tolerances
+  (`perPixelTolerance`/`overallTolerance`, applied at capture time), and
+  `captureSettleDuration` (default `0`; set to `0.6`–`1.0` to let entrance animations
+  settle before capture — see gotcha #3).
 
 ## Running
 
@@ -153,6 +155,20 @@ people up constantly:
    vanish and text overlaps the content behind. Use a **solid color** instead — e.g.
    `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) reads as a native
    elevated card and renders correctly.
+
+3. **Entrance animations capture blank.** A snapshot is a single synchronous frame, so a
+   screen whose content is revealed by `onAppear { withAnimation { … } }` from `opacity 0`,
+   an offset, or a scale is captured at the *start* of the animation — fully hidden. If the
+   whole screen is gated this way the image is pure white. **Fix:** set
+   `DocumentationConfiguration(captureSettleDuration: 0.6...1.0)` (slightly longer than your
+   longest entrance animation) — the view is hosted in a live window and the run loop is
+   pumped so the animation settles before capture. Default `0` keeps capture synchronous and
+   leaves existing baselines untouched, so it's opt-in; re-record after enabling it.
+
+4. **Video / map / Metal layers don't rasterize.** `VideoPlayer` / `AVPlayerLayer`,
+   `Map`, `SceneKit`/`Metal` views, and other compositor-backed layers render blank offscreen
+   — `captureSettleDuration` does **not** help (the layer never produces a bitmap). Document a
+   **poster frame** (a static `Image`) for these instead.
 
 ## Adding a screen to an existing, already-recorded flow
 

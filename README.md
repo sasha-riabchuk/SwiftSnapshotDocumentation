@@ -259,7 +259,8 @@ let config = DocumentationConfiguration(
     overallTolerance: 0.05,         // Fraction of pixels allowed to differ
     createIndexPage: true,          // Curate a Topics → Screens listing on the root page
     includeFlowDiagram: false,      // Add a Mermaid flow diagram of the screen sequence
-    organizeByDevice: false         // Group catalog images into per-device subfolders
+    organizeByDevice: false,        // Group catalog images into per-device subfolders
+    captureSettleDuration: 0        // Seconds to let entrance animations settle (see below)
 )
 
 // Pass the configuration at flow creation so the comparison tolerances take
@@ -286,6 +287,30 @@ regression snapshots in `__Snapshots__` are left bare; only the copies placed in
 the DocC catalog are framed. `organizeByDevice` groups those copies into
 per-device subfolders (`Resources/Snapshots/iPhone15Pro/…`); DocC still resolves
 the images by filename, so article links are unaffected.
+
+### Screens that animate in (`captureSettleDuration`)
+
+A snapshot records a single synchronous frame. A screen whose content is revealed by
+an entrance animation — `onAppear { withAnimation { … } }` starting from `opacity 0`,
+an offset, or a scale — is therefore captured at the *start* of that animation, i.e.
+fully hidden. If the whole screen is gated this way, the image comes out blank/white.
+
+Set `captureSettleDuration` to slightly more than your longest entrance animation:
+
+```swift
+let config = DocumentationConfiguration(captureSettleDuration: 0.8)
+```
+
+The view is then hosted in a live `UIWindow` (matching the device's size, safe-area
+insets, and traits) and the run loop is pumped for that duration so `onAppear`,
+`.task`, and entrance animations complete before the settled frame is captured. The
+default `0` keeps capture fully synchronous — identical to prior behavior, so existing
+baselines are unaffected. Because enabling it changes animated screens, re-record those
+baselines after turning it on.
+
+> **Note:** `captureSettleDuration` cannot help compositor-backed layers such as
+> `VideoPlayer` / `AVPlayerLayer`, `Map`, or Metal/SceneKit views — they don't
+> rasterize in offscreen snapshots at all. Document a static **poster frame** for those.
 
 ## Using with AI coding agents
 

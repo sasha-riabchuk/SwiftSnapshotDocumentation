@@ -219,6 +219,9 @@ public final class DocumentedFlow {
                                   device.name,
                                   theme.name)
 
+        let dark = theme.colorScheme == .dark
+        let settleDuration = configuration.captureSettleDuration
+
         let capture = {
             // Host the view in a real UIHostingController and snapshot the *controller*
             // (`.image(on:)`) rather than the bare view (`.image(layout: .device)`).
@@ -228,19 +231,45 @@ public final class DocumentedFlow {
             // (collapsed safe area); the hosted strategy is byte-identical otherwise.
             // See https://github.com/sasha-riabchuk/SwiftSnapshotDocumentation/issues/2
             let host = UIHostingController(rootView: view)
+
+            // Settle: when configured, mount the host in a live window and pump the run
+            // loop so `onAppear`, `.task`, and entrance animations complete before
+            // capture. SwiftUI @State persists across the snapshot strategy's own
+            // re-mount, so the settled frame is what gets recorded. A duration of 0
+            // (default) skips this entirely — identical to prior behavior, so existing
+            // baselines are unaffected.
+            var settleWindow: UIWindow?
+            if settleDuration > 0 {
+                let size = device.viewImageConfig.size ?? UIScreen.main.bounds.size
+                host.view.frame = CGRect(origin: .zero, size: size)
+                host.overrideUserInterfaceStyle = dark ? .dark : .light
+                let window = UIWindow(frame: host.view.frame)
+                window.overrideUserInterfaceStyle = dark ? .dark : .light
+                window.rootViewController = host
+                window.makeKeyAndVisible()
+                host.view.setNeedsLayout()
+                host.view.layoutIfNeeded()
+                RunLoop.main.run(until: Date(timeIntervalSinceNow: settleDuration))
+                settleWindow = window
+            }
+
             assertSnapshot(
                 of: host,
                 as: .image(
                     on: device.viewImageConfig,
                     precision: self.configuration.snapshotPrecision,
                     perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
-                    traits: .init(userInterfaceStyle: theme.colorScheme == .dark ? .dark : .light)
+                    traits: .init(userInterfaceStyle: dark ? .dark : .light)
                 ),
                 named: snapshotName,
                 file: file,
                 testName: testName,
                 line: line
             )
+
+            // Tear down the settle window after capture.
+            settleWindow?.isHidden = true
+            settleWindow?.rootViewController = nil
         }
 
         // Apply the flow's record mode explicitly when set; otherwise honor whatever

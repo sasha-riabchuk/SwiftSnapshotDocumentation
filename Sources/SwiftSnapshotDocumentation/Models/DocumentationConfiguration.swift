@@ -89,6 +89,25 @@ public struct DocumentationConfiguration: Sendable {
     /// - Default: `false`
     public let organizeByDevice: Bool
 
+    /// How long (in seconds) to let a screen *settle* in a live window before capturing.
+    ///
+    /// A snapshot records a single synchronous frame. Screens whose content is
+    /// revealed by an entrance animation — e.g. `onAppear { withAnimation { … } }`
+    /// starting from `opacity 0`, an offset, or a scale — are otherwise captured at
+    /// the *start* of that animation, i.e. fully hidden (a blank/white image).
+    ///
+    /// When this is greater than `0`, the view is hosted in a real `UIWindow`
+    /// (matching the device's size, safe-area insets, and traits) and the main run
+    /// loop is pumped for this duration so `onAppear`, `.task`, and entrance
+    /// animations complete, then the *settled* frame is captured.
+    ///
+    /// - Default: `0` (capture synchronously — identical to prior behavior; existing
+    ///   baselines are unaffected). Set to slightly more than your longest entrance
+    ///   animation (e.g. `0.6`–`1.0`).
+    /// - Note: iOS-only; ignored on other platforms. Enabling it produces new
+    ///   baselines for animated screens, so re-record after turning it on.
+    public let captureSettleDuration: TimeInterval
+
     /// Creates a documentation configuration with default values.
     ///
     /// - Parameters:
@@ -99,6 +118,8 @@ public struct DocumentationConfiguration: Sendable {
     ///   - createIndexPage: Create index page (default: `true`)
     ///   - includeFlowDiagram: Include flow diagram (default: `false`)
     ///   - organizeByDevice: Organize images by device (default: `false`)
+    ///   - captureSettleDuration: Seconds to let entrance animations settle before
+    ///     capture (default: `0` — synchronous capture, existing behavior)
     public init(
         imageFormat: ImageFormat = .png,
         deviceFrames: Bool = true,
@@ -106,7 +127,8 @@ public struct DocumentationConfiguration: Sendable {
         overallTolerance: Float = 0.05,
         createIndexPage: Bool = true,
         includeFlowDiagram: Bool = false,
-        organizeByDevice: Bool = false
+        organizeByDevice: Bool = false,
+        captureSettleDuration: TimeInterval = 0
     ) {
         self.imageFormat = imageFormat
         self.deviceFrames = deviceFrames
@@ -115,6 +137,7 @@ public struct DocumentationConfiguration: Sendable {
         self.createIndexPage = createIndexPage
         self.includeFlowDiagram = includeFlowDiagram
         self.organizeByDevice = organizeByDevice
+        self.captureSettleDuration = captureSettleDuration
     }
 }
 

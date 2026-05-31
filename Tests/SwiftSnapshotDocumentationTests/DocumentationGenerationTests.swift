@@ -369,6 +369,18 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
     #expect(negative.snapshotPerceptualPrecision == 1)
 }
 
+// MARK: - Settle duration (entrance-animation capture)
+
+@Test func captureSettleDurationDefaultsToZero() {
+    // The default must stay 0 so capture remains synchronous and existing baselines
+    // are unaffected; settling is strictly opt-in.
+    #expect(DocumentationConfiguration().captureSettleDuration == 0)
+}
+
+@Test func captureSettleDurationIsStored() {
+    #expect(DocumentationConfiguration(captureSettleDuration: 0.75).captureSettleDuration == 0.75)
+}
+
 // MARK: - Fix #1: deterministic snapshot directory derivation
 
 @Test func snapshotDirectoryMatchesSnapshotTestingLayout() {

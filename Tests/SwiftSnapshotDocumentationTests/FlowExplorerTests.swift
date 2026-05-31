@@ -78,3 +78,24 @@ private func screenStub(_ title: String, _ transitions: [ScreenTransition] = [])
     #expect(f.imageCount == 6)
     #expect(f.unresolvedTransitions.isEmpty)
 }
+
+private func fxTempDir() throws -> URL {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent("ssd-fx-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+}
+
+@Test func snapshotImageCopierStripsPrefixAndIndexes() throws {
+    let dir = try fxTempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+    try Data([0x89]).write(to: dir.appendingPathComponent("testFoo.01-welcome-iPhone15Pro-light.png"))
+    let index = try SnapshotImageCopier.index(at: dir.path, fileManager: .default)
+    #expect(index["01-welcome-iPhone15Pro-light.png"] != nil)
+}
+
+@Test func snapshotImageCopierCopiesPlainImage() throws {
+    let dir = try fxTempDir(); defer { try? FileManager.default.removeItem(at: dir) }
+    let src = dir.appendingPathComponent("a.png"); try Data([0x89, 0x50]).write(to: src)
+    let dest = dir.appendingPathComponent("out/a.png")
+    try SnapshotImageCopier.copyImage(from: src.path, to: dest.path, frame: nil)
+    #expect(FileManager.default.fileExists(atPath: dest.path))
+}

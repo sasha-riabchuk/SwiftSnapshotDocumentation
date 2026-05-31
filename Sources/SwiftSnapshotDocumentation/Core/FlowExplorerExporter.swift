@@ -32,7 +32,6 @@ struct FlowExplorerExporter {
         var screenData: [FlowData.Screen] = []
         for (i, screen) in screens.enumerated() {
             var variants: [FlowData.Variant] = []
-            var thumbnail: String?
             for device in screen.devices {
                 for theme in screen.themes {
                     let cleaned = String(format: "%02d-%@-%@-%@.%@",
@@ -43,19 +42,18 @@ struct FlowExplorerExporter {
                     let destPath = "\(imagesDir)/\(cleaned)"
                     try SnapshotImageCopier.copyImage(from: sourceFile, to: destPath, frame: frame)
                     imageCount += 1
-                    variants.append(.init(device: device.name, theme: theme.name, image: "images/\(cleaned)"))
-                    // The node thumbnail is an embedded data URI so it renders in the
-                    // Cytoscape canvas even over file:// (browsers block file:// images
-                    // from canvas). Variant panel images stay as file refs (DOM <img>
-                    // loads those fine). Falls back to the file path if encoding fails.
-                    if thumbnail == nil {
-                        thumbnail = Self.thumbnailDataURI(imagePath: destPath) ?? "images/\(cleaned)"
-                    }
+                    // Each variant carries an embedded data-URI thumbnail so the toolbar
+                    // can re-skin nodes (switch device/theme) and they render over file://
+                    // (browsers block file:// images in canvas). The panel uses `image`
+                    // (a file ref via DOM <img>). Falls back to the file path if encoding fails.
+                    let dataURI = Self.thumbnailDataURI(imagePath: destPath) ?? "images/\(cleaned)"
+                    variants.append(.init(device: device.name, theme: theme.name,
+                                          image: "images/\(cleaned)", thumbnail: dataURI))
                 }
             }
             screenData.append(.init(
                 id: screen.id, title: screen.title, description: screen.description,
-                thumbnail: thumbnail ?? "",
+                thumbnail: variants.first?.thumbnail ?? "",
                 variants: variants,
                 callouts: screen.callouts.map { .init(type: $0.type.rawValue, content: $0.content) }
             ))

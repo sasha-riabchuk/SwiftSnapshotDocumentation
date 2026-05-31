@@ -24,7 +24,10 @@ enum FlowData {
     struct Variant: Codable, Equatable {
         let device: String
         let theme: String
+        /// Relative file path to the framed image (used by the variants panel `<img>`).
         let image: String
+        /// Embedded downscaled `data:` URI for the node canvas (renders over `file://`).
+        let thumbnail: String
     }
     struct Callout: Codable, Equatable {
         let type: String

@@ -34,10 +34,14 @@ private func writeRealPNG(to url: URL, width: Int = 60, height: Int = 120) {
 
     let json = try Data(contentsOf: root.appendingPathComponent("FlowExplorer/Onboarding/feature.json"))
     let feature = try JSONDecoder().decode(FlowData.Feature.self, from: json)
-    // Node thumbnail is an embedded data URI (so it renders in canvas over file://).
-    #expect(feature.screens.first?.thumbnail.hasPrefix("data:image/png;base64,") == true)
+    // Each variant carries an embedded data-URI thumbnail (so the toolbar can re-skin
+    // nodes and they render in canvas over file://).
+    let variant = feature.screens.first?.variants.first
+    #expect(variant?.thumbnail.hasPrefix("data:image/png;base64,") == true)
     // Variant panel images remain plain file references.
-    #expect(feature.screens.first?.variants.first?.image == "images/01-welcome-iPhone15Pro-light.png")
+    #expect(variant?.image == "images/01-welcome-iPhone15Pro-light.png")
+    // The screen's default thumbnail is the first variant's data URI.
+    #expect(feature.screens.first?.thumbnail.hasPrefix("data:image/png;base64,") == true)
 }
 
 @Test func screenTransitionFactorySetsTargetAndLabel() {
@@ -144,7 +148,7 @@ private func fxTempDir() throws -> URL {
         name: "Onboarding", summary: "s",
         screens: [.init(id: "welcome", title: "Welcome", description: "d",
                         thumbnail: "images/01-welcome-iPhone15Pro-light.png",
-                        variants: [.init(device: "iPhone15Pro", theme: "light", image: "images/01-welcome-iPhone15Pro-light.png")],
+                        variants: [.init(device: "iPhone15Pro", theme: "light", image: "images/01-welcome-iPhone15Pro-light.png", thumbnail: "data:image/png;base64,AA")],
                         callouts: [.init(type: "tip", content: "hi")])],
         edges: [.init(from: "welcome", to: "login", label: "next")])
     let data = try FlowData.encoder.encode(feature)

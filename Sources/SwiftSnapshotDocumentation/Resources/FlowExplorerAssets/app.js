@@ -1,6 +1,31 @@
 /* Flow Explorer renderer. Reads window.FLOW_MANIFEST and window.FLOW_DATA. */
 (function () {
   var cy = null;
+  var currentDir = null;
+  var state = { device: null, theme: null }; // selected device family + theme
+
+  function familyOf(d) {
+    return d.indexOf("iPad") >= 0 ? "iPad" : (d.indexOf("iPhone") >= 0 ? "iPhone" : d);
+  }
+
+  // Resolve a value to a node-usable image src: embedded data: URIs (and http) are used
+  // directly; anything else is treated as a path relative to the feature directory.
+  function nodeImg(t, dir) {
+    t = t || "";
+    return (t.indexOf("data:") === 0 || t.indexOf("http") === 0) ? t : (dir + "/" + t);
+  }
+
+  // Pick the thumbnail for a screen under the current device/theme selection, falling
+  // back to the closest available variant so a node never goes blank.
+  function thumbFor(sc) {
+    var vs = sc.variants || [];
+    function pick(test) { for (var i = 0; i < vs.length; i++) if (test(vs[i])) return vs[i]; return null; }
+    var v = pick(function (x) { return familyOf(x.device) === state.device && x.theme === state.theme; })
+         || pick(function (x) { return familyOf(x.device) === state.device; })
+         || pick(function (x) { return x.theme === state.theme; })
+         || vs[0];
+    return v ? v.thumbnail : sc.thumbnail;
+  }
 
   function loadFeature(entry) {
     var existing = window.FLOW_DATA && window.FLOW_DATA[entry.name];
@@ -13,13 +38,12 @@
 
   function render(feature, dir) {
     closePanel();
+    currentDir = dir;
+    buildToolbar(feature); // sets state defaults before nodes are built
+
     var elements = [];
     feature.screens.forEach(function (sc) {
-      // Thumbnail is usually an embedded data: URI (renders in canvas over file://);
-      // fall back to a relative file path for any non-embedded value.
-      var t = sc.thumbnail || "";
-      var img = (t.indexOf("data:") === 0 || t.indexOf("http") === 0) ? t : (dir + "/" + t);
-      elements.push({ data: { id: sc.id, label: sc.title, img: img, screen: sc, dir: dir } });
+      elements.push({ data: { id: sc.id, label: sc.title, img: nodeImg(thumbFor(sc), dir), screen: sc } });
     });
     feature.edges.forEach(function (e) {
       elements.push({ data: { source: e.from, target: e.to, label: e.label || "" } });
@@ -44,6 +68,62 @@
     });
     cy.on("tap", "node", function (evt) { openPanel(evt.target.data("screen"), dir); });
   }
+
+  // Re-skin every node for the current state — Cytoscape re-renders the canvas because
+  // the node style binds background-image to data(img).
+  function reskin() {
+    if (!cy) return;
+    cy.nodes().forEach(function (n) { n.data("img", nodeImg(thumbFor(n.data("screen")), currentDir)); });
+  }
+
+  // MARK: toolbar
+
+  function labelTheme(t) { return t === "light" ? "Light" : (t === "dark" ? "Dark" : t); }
+
+  function segGroup(title, values, labelFn, current, onPick) {
+    var g = document.createElement("div"); g.className = "group";
+    var l = document.createElement("span"); l.className = "glabel"; l.textContent = title; g.appendChild(l);
+    var seg = document.createElement("div"); seg.className = "seg";
+    values.forEach(function (val) {
+      var b = document.createElement("button");
+      b.textContent = labelFn(val);
+      if (val === current) b.className = "on";
+      b.onclick = function () {
+        Array.prototype.forEach.call(seg.children, function (c) { c.className = ""; });
+        b.className = "on";
+        onPick(val);
+      };
+      seg.appendChild(b);
+    });
+    g.appendChild(seg);
+    return g;
+  }
+
+  function buildToolbar(feature) {
+    var devSet = {}, themeSet = {};
+    feature.screens.forEach(function (sc) {
+      (sc.variants || []).forEach(function (v) { devSet[familyOf(v.device)] = 1; themeSet[v.theme] = 1; });
+    });
+    var families = Object.keys(devSet);
+    var themes = Object.keys(themeSet).sort(function (a, b) {
+      return (a === "light" ? 0 : 1) - (b === "light" ? 0 : 1); // Light before Dark
+    });
+    if (families.indexOf(state.device) < 0) state.device = families[0] || null;
+    if (themes.indexOf(state.theme) < 0) state.theme = themes[0] || null;
+
+    var tb = document.getElementById("toolbar");
+    tb.innerHTML = "";
+    if (families.length > 1) {
+      tb.appendChild(segGroup("Device", families, function (f) { return f; }, state.device,
+        function (val) { state.device = val; reskin(); }));
+    }
+    if (themes.length > 1) {
+      tb.appendChild(segGroup("Appearance", themes, labelTheme, state.theme,
+        function (val) { state.theme = val; reskin(); }));
+    }
+  }
+
+  // MARK: variants panel
 
   function openPanel(screen, dir) {
     var body = document.getElementById("panel-body");

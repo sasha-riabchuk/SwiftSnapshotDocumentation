@@ -200,7 +200,7 @@ await flow.addScreen(
 try await flow.exportFlowExplorer(at: "FlowExplorer")
 ```
 
-Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals so `file://` works with no server required.
+Open `FlowExplorer/index.html` directly in a browser — data is emitted as JS globals so `file://` works with no server required. Pan/zoom the graph, click a node to see all of a screen's device × theme variants, and use the **toolbar** to flip the whole flow between **iPhone/iPad** and **Light/Dark** (the toggles appear only for the device families and themes your snapshots cover; nodes lacking the exact variant fall back to their closest one).
 
 Note: when any screen declares `transitions:`, the linear fallback is disabled flow-wide, so screens without an incoming or outgoing transition appear as unconnected nodes — give every screen a transition for a fully connected graph.
 

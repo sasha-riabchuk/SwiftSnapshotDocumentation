@@ -16,6 +16,11 @@ public struct ScreenTransition: Sendable, Equatable {
     /// An optional trigger/condition rendered on the edge (e.g. "valid").
     public let label: String?
 
+    /// Creates a screen transition.
+    ///
+    /// - Parameters:
+    ///   - target: The target screen's title or id.
+    ///   - label: An optional trigger/condition rendered on the edge.
     public init(target: String, label: String? = nil) {
         self.target = target
         self.label = label

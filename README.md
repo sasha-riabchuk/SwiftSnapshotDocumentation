@@ -214,7 +214,8 @@ let config = DocumentationConfiguration(
     deviceFrames: true,             // Composite a device bezel around each image
     perPixelTolerance: 0.01,        // Per-pixel comparison tolerance
     overallTolerance: 0.05,         // Fraction of pixels allowed to differ
-    createIndexPage: true,          // Generate index page
+    createIndexPage: true,          // Curate a Topics → Screens listing on the root page
+    includeFlowDiagram: false,      // Add a Mermaid flow diagram of the screen sequence
     organizeByDevice: false         // Group catalog images into per-device subfolders
 )
 

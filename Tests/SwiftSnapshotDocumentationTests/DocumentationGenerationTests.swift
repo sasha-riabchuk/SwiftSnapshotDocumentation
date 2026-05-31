@@ -45,6 +45,16 @@ private func welcomeScreen() -> DocumentedScreen {
     )
 }
 
+private func screen(_ title: String) -> DocumentedScreen {
+    DocumentedScreen(
+        title: title,
+        description: "\(title) description",
+        viewBuilder: { Text(title) },
+        devices: [makeDevice("iPhone15Pro")],
+        themes: [.light]
+    )
+}
+
 @MainActor
 private func makeGenerator(
     source: String?,
@@ -227,6 +237,67 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
     // Grouped into a per-device subfolder, not placed at the root.
     #expect(FileManager.default.fileExists(atPath: snapshots.appendingPathComponent("iPhone15Pro/01-welcome-iPhone15Pro-light.png").path))
     #expect(!FileManager.default.fileExists(atPath: snapshots.appendingPathComponent("01-welcome-iPhone15Pro-light.png").path))
+}
+
+// MARK: - createIndexPage + includeFlowDiagram catalog sections
+
+@MainActor
+@Test func catalogIncludesTopicsAndFlowDiagramWhenEnabled() async throws {
+    let root = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
+    try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+    try writeDummyImage(named: "testX.01-welcome-screen-iPhone15Pro-light.png", in: source)
+
+    let generator = makeGenerator(
+        source: source.path,
+        screens: [screen("Welcome Screen"), screen("Login Screen")],
+        configuration: .init(deviceFrames: false, createIndexPage: true, includeFlowDiagram: true)
+    )
+    try await generator.generate(at: root.appendingPathComponent("MyFlow").path)
+
+    let catalog = try String(
+        contentsOf: root.appendingPathComponent("MyFlow.docc/MyFlow.md"),
+        encoding: .utf8
+    )
+
+    // Index page: curated Topics listing linking each screen article.
+    #expect(catalog.contains("## Topics"))
+    #expect(catalog.contains("<doc:01-welcome-screen>"))
+    #expect(catalog.contains("<doc:02-login-screen>"))
+
+    // Flow diagram: a Mermaid flowchart connecting the screens in order.
+    #expect(catalog.contains("```mermaid"))
+    #expect(catalog.contains("flowchart TD"))
+    #expect(catalog.contains("screen0[\"Welcome Screen\"] --> screen1[\"Login Screen\"]"))
+}
+
+@MainActor
+@Test func catalogOmitsTopicsAndFlowDiagramWhenDisabled() async throws {
+    let root = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let source = root.appendingPathComponent("__Snapshots__/MyTests", isDirectory: true)
+    try FileManager.default.createDirectory(at: source, withIntermediateDirectories: true)
+    try writeDummyImage(named: "testX.01-welcome-screen-iPhone15Pro-light.png", in: source)
+
+    let generator = makeGenerator(
+        source: source.path,
+        screens: [screen("Welcome Screen"), screen("Login Screen")],
+        configuration: .init(deviceFrames: false, createIndexPage: false, includeFlowDiagram: false)
+    )
+    try await generator.generate(at: root.appendingPathComponent("MyFlow").path)
+
+    let catalog = try String(
+        contentsOf: root.appendingPathComponent("MyFlow.docc/MyFlow.md"),
+        encoding: .utf8
+    )
+
+    // Root page is still written (DocC requires it) but the optional sections are gone.
+    #expect(catalog.contains("@TechnologyRoot"))
+    #expect(!catalog.contains("## Topics"))
+    #expect(!catalog.contains("```mermaid"))
 }
 
 // MARK: - Tolerances map to swift-snapshot-testing precision values

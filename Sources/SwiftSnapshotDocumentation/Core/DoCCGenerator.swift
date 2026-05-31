@@ -84,6 +84,13 @@ final class DoCCGenerator {
     }
 
     /// Generates the main catalog Markdown file.
+    ///
+    /// The `@TechnologyRoot` page itself is always written (DocC requires a root),
+    /// but its optional sections are config-driven:
+    /// - ``DocumentationConfiguration/includeFlowDiagram`` adds a Mermaid diagram of
+    ///   the screen sequence after the overview.
+    /// - ``DocumentationConfiguration/createIndexPage`` adds the curated
+    ///   `Topics → Screens` listing that links to each screen article.
     private func generateCatalogFile() -> String {
         var content = """
         # \(flow.name)
@@ -99,22 +106,54 @@ final class DoCCGenerator {
 
         \(flow.overview.isEmpty ? "This flow documents the \(flow.name.lowercased()) user experience." : flow.overview)
 
-        ## Topics
-
-        ### Screens
-
 
         """
 
-        // Add screen references
-        for (index, screen) in screens.enumerated() {
-            let articleId = String(format: "%02d-%@", index + 1, screen.id)
-            content += "- <doc:\(articleId)>\n"
+        if configuration.includeFlowDiagram, !screens.isEmpty {
+            content += generateFlowDiagram()
         }
 
-        content += "\n"
+        if configuration.createIndexPage {
+            content += """
+            ## Topics
+
+            ### Screens
+
+
+            """
+
+            for (index, screen) in screens.enumerated() {
+                let articleId = String(format: "%02d-%@", index + 1, screen.id)
+                content += "- <doc:\(articleId)>\n"
+            }
+
+            content += "\n"
+        }
 
         return content
+    }
+
+    /// Builds a Mermaid flowchart linking the screens in order.
+    ///
+    /// The flow is the ordered screen sequence, so the diagram connects each screen
+    /// to the next. DocC renders fenced `mermaid` blocks as diagrams.
+    private func generateFlowDiagram() -> String {
+        func node(_ index: Int) -> String {
+            let label = screens[index].title.replacingOccurrences(of: "\"", with: "'")
+            return "screen\(index)[\"\(label)\"]"
+        }
+
+        var lines = ["## Flow", "", "```mermaid", "flowchart TD"]
+        if screens.count == 1 {
+            lines.append("    \(node(0))")
+        } else {
+            for index in 0..<(screens.count - 1) {
+                lines.append("    \(node(index)) --> \(node(index + 1))")
+            }
+        }
+        lines.append("```")
+        lines.append("\n")
+        return lines.joined(separator: "\n")
     }
 
     /// Generates an article for a specific screen.

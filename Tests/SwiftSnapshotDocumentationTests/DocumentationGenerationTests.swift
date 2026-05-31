@@ -19,6 +19,18 @@ import ImageIO
 import SnapshotTesting
 @testable import SwiftSnapshotDocumentation
 
+// MARK: - Off-iOS "no snapshots" maps to a clear captureUnavailable error
+
+@Test func noSnapshotsMapsToCaptureUnavailableWhenCaptureUnsupported() {
+    // Capture unsupported: "no snapshots" failures become the precise platform error.
+    #expect(DocumentedFlow.mappedGenerationError(.noSnapshotsCopied(sourcePath: "/x"), captureSupported: false) == .captureUnavailable)
+    #expect(DocumentedFlow.mappedGenerationError(.snapshotsNotFound(searchedPaths: ["/x"]), captureSupported: false) == .captureUnavailable)
+    // Unrelated errors pass through unchanged.
+    #expect(DocumentedFlow.mappedGenerationError(.imageProcessingFailed(path: "/x"), captureSupported: false) == .imageProcessingFailed(path: "/x"))
+    // Capture supported (iOS): nothing is remapped — the original error stands.
+    #expect(DocumentedFlow.mappedGenerationError(.noSnapshotsCopied(sourcePath: "/x"), captureSupported: true) == .noSnapshotsCopied(sourcePath: "/x"))
+}
+
 // MARK: - Record mode maps to swift-snapshot-testing
 
 @Test func recordModeMapsToSnapshotTestingRecord() {
@@ -348,7 +360,12 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
 
     let generator = makeGenerator(source: source.path, screens: [welcomeScreen()])
     let outputPath = root.appendingPathComponent("MyFlow").path
-    try await generator.generate(at: outputPath)
+    let result = try await generator.generate(at: outputPath)
+
+    // The returned result lets callers verify success without scraping stdout.
+    #expect(result.path.hasSuffix("MyFlow.docc"))
+    #expect(result.screenCount == 1)
+    #expect(result.imageCount == 2)
 
     let snapshots = root.appendingPathComponent("MyFlow.docc/Resources/Snapshots", isDirectory: true)
     let light = snapshots.appendingPathComponent("01-welcome-iPhone15Pro-light.png")

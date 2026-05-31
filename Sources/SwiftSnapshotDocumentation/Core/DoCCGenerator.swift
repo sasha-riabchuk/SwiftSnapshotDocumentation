@@ -41,8 +41,11 @@ final class DoCCGenerator {
     /// Generates the complete DocC catalog at the specified path.
     ///
     /// - Parameter outputPath: The directory path where the `.docc` catalog should be created
-    /// - Throws: File system errors if the catalog cannot be written
-    func generate(at outputPath: String) async throws {
+    /// - Returns: A ``GeneratedCatalog`` describing the result (path + counts).
+    /// - Throws: ``DocumentationError`` if no snapshots were found/copied, or file
+    ///   system errors if the catalog cannot be written.
+    @discardableResult
+    func generate(at outputPath: String) async throws -> GeneratedCatalog {
         let fileManager = FileManager.default
         let doccPath = outputPath.hasSuffix(".docc") ? outputPath : "\(outputPath).docc"
 
@@ -81,6 +84,8 @@ final class DoCCGenerator {
         print("📊 Screens documented: \(screens.count)")
         print("📸 Total snapshots: \(totalSnapshotCount())")
         print("📸 Images copied: \(copiedCount)")
+
+        return GeneratedCatalog(path: doccPath, screenCount: screens.count, imageCount: copiedCount)
     }
 
     /// Generates the main catalog Markdown file.

@@ -25,6 +25,11 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
     /// An image could not be decoded or re-encoded while compositing a device frame.
     case imageProcessingFailed(path: String)
 
+    /// Generation found no snapshots, and snapshot capture is unavailable on this
+    /// platform — i.e. the test is running somewhere other than iOS and there were
+    /// no pre-recorded snapshots to fall back on.
+    case captureUnavailable
+
     public var description: String {
         switch self {
         case let .snapshotsNotFound(searchedPaths):
@@ -41,6 +46,14 @@ public enum DocumentationError: Error, CustomStringConvertible, Equatable {
             """
         case let .imageProcessingFailed(path):
             return "Failed to process image while compositing a device frame: \(path)"
+        case .captureUnavailable:
+            return """
+            Snapshot capture is only available on iOS, and no pre-recorded snapshots \
+            were found. Run your documentation test on an iOS simulator, e.g.:
+              xcodebuild test -scheme <Scheme> \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+            (Generating from already-committed snapshots does work on macOS.)
+            """
         }
     }
 }

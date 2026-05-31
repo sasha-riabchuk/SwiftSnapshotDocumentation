@@ -91,9 +91,11 @@ xcodebuild test \
 
 ## Verifying success
 
-- `generateDocumentation` prints `📸 Images copied: N` and the catalog path.
-- If it throws `DocumentationError`, read the message — it names the fix (almost
-  always: capture wasn't run on iOS, or no snapshots exist yet → record first).
+- `generateDocumentation` returns `GeneratedCatalog { path, screenCount, imageCount }`.
+  Check `imageCount > 0` to confirm it actually produced images — don't rely on stdout.
+- If it throws `DocumentationError`, read the message — it names the fix. Off-iOS with
+  no committed snapshots you get `.captureUnavailable` (run on a simulator); a missing
+  baseline gives `.snapshotsNotFound` / `.noSnapshotsCopied` (record first).
 - Confirm `<output>.docc/Resources/Snapshots/` contains the images and that
   `<output>.docc/<Name>.md` plus per-screen `NN-*.md` articles exist.
 

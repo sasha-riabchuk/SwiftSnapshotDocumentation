@@ -240,8 +240,9 @@ public final class DocumentedFlow {
             capture()
         }
         #else
-        // Snapshot testing for SwiftUI views is iOS-only
-        print("⚠️  Snapshot testing is only supported on iOS")
+        // Snapshot capture is iOS-only. Generation surfaces a clear
+        // DocumentationError.captureUnavailable when no baselines exist.
+        print("⚠️  SwiftSnapshotDocumentation: snapshot capture is iOS-only; run on an iOS simulator.")
         #endif
     }
 
@@ -273,13 +274,17 @@ public final class DocumentedFlow {
     ///     comparison tolerances are applied at capture time, so overriding them
     ///     here has no effect on already-captured snapshots.
     ///
-    /// - Throws: ``DocumentationError`` if no snapshots are found, or file system
-    ///   errors if documentation cannot be written.
+    /// - Returns: A ``GeneratedCatalog`` with the catalog path and screen/image counts,
+    ///   so callers can verify success programmatically. Safe to ignore.
+    /// - Throws: ``DocumentationError`` if no snapshots are found (or
+    ///   ``DocumentationError/captureUnavailable`` when running off-iOS with no
+    ///   pre-recorded snapshots), or file system errors if the catalog can't be written.
+    @discardableResult
     public func generateDocumentation(
         outputPath: String,
         snapshotSourcePath: String? = nil,
         configuration: DocumentationConfiguration? = nil
-    ) async throws {
+    ) async throws -> GeneratedCatalog {
         let generator = DoCCGenerator(
             flow: self,
             screens: screens,
@@ -287,7 +292,38 @@ public final class DocumentedFlow {
             configuration: configuration ?? self.configuration
         )
 
-        try await generator.generate(at: outputPath)
+        #if os(iOS)
+        let captureSupported = true
+        #else
+        let captureSupported = false
+        #endif
+
+        do {
+            return try await generator.generate(at: outputPath)
+        } catch let error as DocumentationError {
+            // On a platform where capture can't run, a "no snapshots" failure is
+            // really a platform problem — surface that specifically. If snapshots
+            // were found (e.g. committed baselines), generation still succeeds here.
+            throw Self.mappedGenerationError(error, captureSupported: captureSupported)
+        }
+    }
+
+    /// Maps a generic "no snapshots" generation failure to ``DocumentationError/captureUnavailable``
+    /// when snapshot capture isn't supported on the current platform.
+    ///
+    /// Extracted as a pure function so the mapping is testable independently of the
+    /// platform the tests run on.
+    nonisolated static func mappedGenerationError(
+        _ error: DocumentationError,
+        captureSupported: Bool
+    ) -> DocumentationError {
+        guard !captureSupported else { return error }
+        switch error {
+        case .snapshotsNotFound, .noSnapshotsCopied:
+            return .captureUnavailable
+        default:
+            return error
+        }
     }
 
     /// Computes the directory swift-snapshot-testing uses for a given test file.

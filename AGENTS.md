@@ -95,7 +95,10 @@ xcodebuild test \
 - **`addScreen(title:description:discussion:view:devices:themes:callouts:)` `async`** —
   `view:` is `() -> some View`; `discussion`/`callouts` optional.
 - **`generateDocumentation(outputPath:snapshotSourcePath:configuration:)` `async throws`** —
-  writes the `.docc`; throws `DocumentationError` if no snapshots were captured.
+  writes the `.docc` and **returns** `GeneratedCatalog { path, screenCount, imageCount }`
+  (`@discardableResult` — safe to ignore, or assert `imageCount > 0` to verify success).
+  Throws `DocumentationError`; off-iOS with no pre-recorded snapshots it throws
+  `.captureUnavailable` (message points you to run on a simulator).
 - **Devices** (iOS-only): `.iPhoneSE`, `.iPhone15Pro`, `.iPhone15ProMax`, `.iPadPro11`,
   `.iPadPro129`, and `.allIPhones` / `.allIPads` / `.allDevices`.
 - **Themes**: `.light`, `.dark`, `.allThemes`.

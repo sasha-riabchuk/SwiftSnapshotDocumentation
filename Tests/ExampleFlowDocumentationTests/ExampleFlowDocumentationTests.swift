@@ -355,9 +355,9 @@ final class ExampleFlowDocumentationTests: XCTestCase {
     }
 
     /// A showcase of recent SwiftUI features — MeshGradient, Liquid Glass, Gauge / Swift
-    /// Charts, ContentUnavailableView. The two Liquid Glass screens deliberately contrast
-    /// the real `.glassEffect()` (which renders transparent in an offscreen snapshot) with
-    /// a rasterizable documentation stand-in, demonstrating the recommended approach.
+    /// Charts, ContentUnavailableView. The Liquid Glass screen shows the real `.glassEffect()`,
+    /// which renders transparent in an offscreen snapshot; capture it for real with
+    /// `captureMode: .hostWindow` from a host app (see the repo's `HostApp/` target).
     func testGenerateModernSwiftUIFlow() async throws {
         let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
 
@@ -370,8 +370,8 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             `ContentUnavailableView` (iOS 17).
 
             Liquid Glass is a backdrop effect — it samples the content behind it, so an
-            offscreen snapshot captures it transparent. The two glass screens contrast the
-            real API with a documentation-friendly stand-in.
+            offscreen snapshot captures it transparent. Capture the real effect from a host
+            app with `captureMode: .hostWindow` (see the repo's `HostApp/` target).
             """,
             record: isRecording ? .record : .verify
         )
@@ -389,17 +389,9 @@ final class ExampleFlowDocumentationTests: XCTestCase {
         await flow.addScreen(
             title: "Liquid Glass — Real",
             description: "Real `.glassEffect()` (iOS 26) — note the transparent backdrop offscreen",
-            discussion: "Liquid Glass samples the framebuffer behind it, which an offscreen snapshot can't provide, so the capsule fill is missing (the label floats). Capture the real effect with `captureMode: .hostWindow` from a host-app test target, or substitute a stand-in.",
+            discussion: "Liquid Glass samples the framebuffer behind it, which an offscreen snapshot can't provide, so the capsule fill is missing (the label floats). Capture the real effect with `captureMode: .hostWindow` from a host-app test target — see the repo's `HostApp/` target, which captures the real frosted glass.",
             view: { LiquidGlassRealView() }, devices: devices, themes: themes,
-            callouts: [.init(type: .warning, content: "Glass renders transparent in offscreen capture — see the stand-in screen")],
-            transitions: [.to("Liquid Glass — Stand-in")]
-        )
-        await flow.addScreen(
-            title: "Liquid Glass — Stand-in",
-            description: "A rasterizable glassy stand-in that captures correctly",
-            discussion: "Built from a translucent gradient fill + stroke + shadow, so it renders in an offscreen snapshot while reading as frosted glass — the recommended documentation substitute.",
-            view: { LiquidGlassStandInView() }, devices: devices, themes: themes,
-            callouts: [.init(type: .note, content: "Use this approach when .hostWindow capture isn't available")],
+            callouts: [.init(type: .warning, content: "Glass renders transparent offscreen — capture it for real via .hostWindow (HostApp/)")],
             transitions: [.to("Gauges & Charts")]
         )
         await flow.addScreen(

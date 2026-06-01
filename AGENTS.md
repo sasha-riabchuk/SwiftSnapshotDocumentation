@@ -119,13 +119,9 @@ xcodebuild test \
   works headless, but **doesn't composite** Liquid Glass / materials); `.hostWindow` captures
   through the render server so backdrop effects **can** composite, but **requires a host-app
   test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from
-  the host window. Prefer `.hostWindow` to capture real backdrop effects (verify in a hosted
-  target); otherwise substitute a stand-in in your own view (see the glass/video rows below).
-- **Substituting non-rasterizing effects:** this library is a **test-only** dependency that
-  links XCTest, so a production component must **not** import it — there is no SDK environment
-  flag to read. Substitute in code you own: pick a non-glass **style** the component already
-  exposes, or define your **own** SwiftUI documentation-mode `EnvironmentKey` and set it on the
-  view you pass to `addScreen` (`view: { Screen().environment(\.isDocumentationCapture, true) }`).
+  the host window. Use `.hostWindow` from a host-app test target to capture real backdrop
+  effects — proven for iOS 26 Liquid Glass in the repo's `HostApp/`. In `.offscreen` (no host
+  app), backdrop effects render transparent; there is no faithful offscreen capture of them.
 - **`addScreen(... transitions: [ScreenTransition] = [])`** — declare directed edges from
   this screen to others; edges are optional and default to none (linear order is used
   when no screen declares any transitions).
@@ -152,8 +148,8 @@ xcodebuild test \
 | A screen presenting `.alert` / `.sheet` / `.fullScreenCover` / `.popover` / `.confirmationDialog` / `Menu` snapshots as the empty screen behind it | Native presentations live in a **separate UIKit window** the view-snapshot can't see | Render the **presented appearance inline** (a dimmed `ZStack` with the alert card / sheet / popover drawn in the view tree). `TabView` / `NavigationStack` *are* in the tree and snapshot fine. |
 | A card/overlay built with `.regularMaterial` / `.ultraThinMaterial` is **transparent** in the snapshot (content bleeds through) | Blur **materials don't render** in offscreen snapshots | Use a solid color instead, e.g. `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) — renders correctly and still reads as a native elevated card |
 | A screen that **animates in** (`onAppear { withAnimation { … } }` from `opacity 0` / offset / scale) snapshots **blank/white** | A snapshot is one synchronous frame, captured at the *start* of the entrance animation (content still hidden) | Set `DocumentationConfiguration(captureSettleDuration: 0.6...1.0)` — hosts the view in a live window and pumps the run loop so the animation settles before capture. Default `0` is synchronous (existing baselines unaffected); re-record after enabling |
-| A `VideoPlayer` / `AVPlayerLayer` / `Map` / Metal screen is **blank** | Compositor-backed layers don't rasterize in offscreen snapshots; `captureSettleDuration` won't help | Substitute a **poster frame** (static `Image`) — gate it on your **own** documentation-mode env key set in the `view:` builder (don't import this test-only library into production) |
-| A **Liquid Glass** (`.glassEffect()`) button/screen is transparent or blank | Glass samples the backdrop; the default offscreen render skips backdrop filters | Use `captureMode: .hostWindow` from a **host-app** test target — it captures real glass (proven in the repo's `HostApp/`); otherwise substitute a **solid fill** via your own style/env flag in your code |
+| A `VideoPlayer` / `AVPlayerLayer` / `Map` / Metal screen is **blank** | Compositor-backed layers don't rasterize in offscreen snapshots; `captureSettleDuration` won't help | Capture from a **host-app** test target with `captureMode: .hostWindow` (real render-server pass); offscreen can't composite them |
+| A **Liquid Glass** (`.glassEffect()`) button/screen is transparent or blank | Glass samples the backdrop; the default offscreen render skips backdrop filters | Use `captureMode: .hostWindow` from a **host-app** test target — it captures real glass (proven in the repo's `HostApp/`) |
 | Adding a new screen makes the whole `.verify` test fail / re-records every snapshot | `.record` overwrites everything; `.verify` fails on the missing one | Use `record: .recordMissing` (records only the new screens, verifies the rest), then commit the new `__Snapshots__` PNGs |
 | New `addScreen` is an orphan node in the explorer | Once *any* screen declares `transitions:`, linear fallback is off flow-wide | Give the new screen (and/or its neighbors) a `transitions:` edge, or leave it intentionally disconnected |
 | Flow Explorer nodes look blurry / squished for iPad | (fixed in 1.2.0) | Update to ≥1.2.0 — nodes size to the real aspect ratio and thumbnails are high-res JPEG |

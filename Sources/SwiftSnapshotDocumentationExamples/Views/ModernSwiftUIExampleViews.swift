@@ -7,9 +7,8 @@
 //  the iOS 17 / macOS 14 floor, with graceful fallbacks on older OSes.
 //
 //  Capture note: Liquid Glass (`.glassEffect()`) is a backdrop effect — it renders
-//  transparent in an offscreen snapshot. `LiquidGlassRealView` shows the real API (and
-//  the limitation); `LiquidGlassStandInView` shows the documentation-friendly stand-in
-//  that rasterizes. See the library's "effects that don't rasterize" guidance.
+//  transparent in an offscreen snapshot, and composites correctly only when captured from
+//  a host app (`captureMode: .hostWindow` — see the repo's `HostApp/` target).
 //
 
 import SwiftUI
@@ -96,44 +95,6 @@ public struct LiquidGlassRealView: View {
         } else {
             padded.background(.ultraThinMaterial, in: Capsule())
         }
-    }
-}
-
-// MARK: - Liquid Glass (documentation stand-in)
-
-/// A glassy look built from rasterizable primitives (translucent gradient + stroke +
-/// shadow), so it captures correctly offscreen. This is the recommended documentation
-/// stand-in for Liquid Glass / materials.
-public struct LiquidGlassStandInView: View {
-    public init() {}
-    public var body: some View {
-        ZStack {
-            MeshBackdrop().ignoresSafeArea()
-            VStack(spacing: 20) {
-                Text("Liquid Glass")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(.white)
-                    .shadow(radius: 6)
-                glassStandIn(Text("Continue").fontWeight(.semibold))
-                glassStandIn(Text("Maybe Later"))
-            }
-            .padding(40)
-        }
-    }
-
-    private func glassStandIn(_ label: some View) -> some View {
-        label
-            .foregroundStyle(.white)
-            .padding(.horizontal, 40)
-            .padding(.vertical, 18)
-            .background(
-                Capsule().fill(
-                    LinearGradient(colors: [.white.opacity(0.40), .white.opacity(0.16)],
-                                   startPoint: .top, endPoint: .bottom)
-                )
-            )
-            .overlay(Capsule().strokeBorder(.white.opacity(0.55), lineWidth: 1))
-            .shadow(color: .black.opacity(0.18), radius: 12, y: 5)
     }
 }
 

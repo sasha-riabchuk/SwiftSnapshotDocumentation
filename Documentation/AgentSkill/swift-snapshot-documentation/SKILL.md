@@ -171,60 +171,26 @@ people up constantly:
    **poster frame** (a static `Image`) for these instead.
 
 5. **Liquid Glass renders transparent/blank.** `.glassEffect()` (iOS 26) samples the
-   backdrop, so offscreen it loses its fill (button becomes floating text) or blanks the
-   screen on some toolchains — same bucket as materials and video. Two fixes: capture the
-   real effect with `captureMode: .hostWindow` (no production changes, host-app target only),
-   or substitute a solid fill — see the *Effects that don't rasterize* section below.
+   backdrop, so offscreen it loses its fill (button becomes floating text) — same bucket as
+   materials and video. Capture the real effect with `captureMode: .hostWindow` from a
+   host-app target — see the *Effects that don't rasterize* section below.
 
 ## Effects that don't rasterize (Liquid Glass, materials, video)
 
 These are backdrop/compositor effects; `CALayer.render(in:)` (the default capture) skips
-them. Two options:
-
-**1. Capture the real thing — `captureMode: .hostWindow`.** Changes nothing in your views;
-switches capture to a render-server pass that can composite materials / glass:
+them, so offscreen they come out transparent. Capture them for real with
+`captureMode: .hostWindow`:
 
 ```swift
 let config = DocumentationConfiguration(captureMode: .hostWindow)
 ```
 
-It uses `drawHierarchy(afterScreenUpdates:)` in the key window, so it **requires a host-app
-test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from
-the host window. Materials render under it; verify iOS 26 Liquid Glass in your hosted target.
-
-**2. Substitute a stand-in — in your own code.** Do **not** reach for an environment flag from
-this library: it is a test-only dependency that links XCTest, so a production component must
-not import it. Substitute in code you own — either pick a non-glass **style** the component
-already exposes, or define your **own** documentation environment flag (SwiftUI only) and set
-it on the view you pass to `addScreen`:
-
-```swift
-// In your app (no dependency on this library):
-private struct DocumentationModeKey: EnvironmentKey { static let defaultValue = false }
-extension EnvironmentValues {
-    var isDocumentationCapture: Bool {
-        get { self[DocumentationModeKey.self] } set { self[DocumentationModeKey.self] = newValue }
-    }
-}
-
-// In the documentation test:
-await flow.addScreen(title: "Welcome", description: "Landing",
-    view: { WelcomeView().environment(\.isDocumentationCapture, true) })
-
-// In your component: render a solid fill when isDocumentationCapture, glass otherwise.
-```
-
-Prefer `.hostWindow` to capture the real effect; fall back to substitution only where it
-doesn't. Pair with `captureSettleDuration` when a substituted screen also animates in.
-
-**Want the real effect instead of a stand-in?** Set `DocumentationConfiguration(captureMode:
-.hostWindow)`. The default `.offscreen` renders the layer tree (device-accurate, works in any
-test bundle, but skips backdrop filters → glass/materials transparent). `.hostWindow` captures
-through the render server so those effects **can** composite — but it **requires a host-app
-test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from the
-host window. Materials **and** iOS 26 Liquid Glass both render under it — the repo's `HostApp/`
-target captures the real frosted glass this way (a working template for a host-based test target).
-Use `.offscreen` + a stand-in by default; `.hostWindow` only where a true backdrop effect matters.
+It uses `drawHierarchy(afterScreenUpdates:)` in the key window — a real render-server pass
+that **does** composite materials and iOS 26 Liquid Glass. It **requires a host-app test
+target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from the host
+window. The repo's `HostApp/` target captures the real frosted glass this way and is the
+working template for a host-based test target. In `.offscreen` (no host app) these effects
+render transparent — there is no faithful offscreen capture of them.
 
 ## Adding a screen to an existing, already-recorded flow
 

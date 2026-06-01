@@ -319,64 +319,28 @@ Some effects never survive an offscreen snapshot pass: Liquid Glass (`.glassEffe
 and blur materials (`.regularMaterial`, …) render with a transparent backdrop, and
 `VideoPlayer` / `AVPlayerLayer` / Metal views come out blank. They are produced by the
 render server sampling the framebuffer behind the layer, and `CALayer.render(in:)` (the
-default capture) **skips backdrop filters by design**. There are two ways to deal with it.
-
-**1. Capture the real effect — `captureMode: .hostWindow`.** This changes nothing in your
-production views; it switches the capture path to go through the render server, which
-**can** composite those effects:
+default capture) **skips backdrop filters by design**. Capture them for real with
+`captureMode: .hostWindow`:
 
 ```swift
 let config = DocumentationConfiguration(captureMode: .hostWindow)
 ```
 
-The trade-off is real and worth understanding:
+This changes nothing in your views — it switches the capture path to go through the render
+server (`drawHierarchy(afterScreenUpdates:)` in the key window), which **does** composite the
+real effect. iOS 26 **Liquid Glass** is verified end-to-end in [`HostApp/`](HostApp/), a minimal
+host-app target that captures the real frosted glass this way; run it (`cd HostApp && xcodebuild
+test -project GlassProof.xcodeproj -scheme GlassProofApp -destination '…'`) and use it as the
+template for your own app's host-based test target.
 
-- `.hostWindow` uses `drawHierarchy(afterScreenUpdates:)` in the key window, which
-  **requires the snapshot test to run in a host application** (an Xcode app test target
-  with a test host). It **traps** in a pure SwiftPM logic-test bundle — there is no key
-  window to composite — so the library keeps `.offscreen` as the default.
+The trade-offs:
+
+- `.hostWindow` **requires the snapshot test to run in a host application** (an Xcode app test
+  target with a test host). It **traps** in a pure SwiftPM logic-test bundle — there is no key
+  window to composite — so the library keeps `.offscreen` as the default. In `.offscreen`,
+  backdrop effects simply render transparent; there is no faithful offscreen capture of them.
 - Safe-area insets and scale come from the host app's actual window, so output is less
   device-controllable than `.offscreen`.
-- iOS 26 **Liquid Glass** *does* composite this way — verified end-to-end in
-  [`HostApp/`](HostApp/), a minimal host-app target that captures the real frosted-glass
-  effect via `.hostWindow`. Run it (`cd HostApp && xcodebuild test -project
-  GlassProof.xcodeproj -scheme GlassProofApp -destination '…'`) to see real glass, and use it
-  as a template for wiring `.hostWindow` into your own app's host-based test target.
-
-**2. Substitute a stand-in — in your own view.** If `.hostWindow` isn't an option (or doesn't
-composite the effect), render a documentation-friendly stand-in *only while capturing* — a
-solid fill instead of glass, a poster `Image` instead of a video. Keep this in **your** code,
-not coupled to this library (which is a test-only dependency and links XCTest, so production
-components must not import it). Two clean ways:
-
-- **A real style.** If the component already models “glass vs solid” as a legitimate style,
-  select the solid one in the documentation test — production-meaningful, no test-awareness.
-- **Your own documentation flag**, set at the call site in the `view:` builder:
-
-  ```swift
-  // In your app (SwiftUI only — no dependency on this library):
-  private struct DocumentationModeKey: EnvironmentKey { static let defaultValue = false }
-  extension EnvironmentValues {
-      var isDocumentationCapture: Bool {
-          get { self[DocumentationModeKey.self] }
-          set { self[DocumentationModeKey.self] = newValue }
-      }
-  }
-
-  // In the documentation test — set it on the view you hand to addScreen:
-  await flow.addScreen(
-      title: "Welcome",
-      description: "Landing",
-      view: { WelcomeView().environment(\.isDocumentationCapture, true) }
-  )
-
-  // In your component:
-  @Environment(\.isDocumentationCapture) private var isDocumentationCapture
-  // …render a solid fill when true, glass otherwise.
-  ```
-
-Practical split: prefer `.hostWindow` to capture the real thing; fall back to substitution in
-your own code only where it doesn't.
 
 ## Using with AI coding agents
 

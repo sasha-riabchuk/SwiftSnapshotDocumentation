@@ -64,5 +64,6 @@ bundle is written relative to the test process's working directory.
 
 You don't need this directory — your app already has a host. In your app's **unit-test target
 with a test host**, set `DocumentationConfiguration(captureMode: .hostWindow)` and the same real
-capture applies. Without a host app, use `.offscreen` (the default) and substitute a stand-in for
-glass/materials. See the top-level README's "effects that don't rasterize" section.
+capture applies. Without a host app, `.offscreen` (the default) renders glass/materials
+transparent — there is no faithful offscreen capture of backdrop effects. See the top-level
+README's "effects that don't rasterize" section.

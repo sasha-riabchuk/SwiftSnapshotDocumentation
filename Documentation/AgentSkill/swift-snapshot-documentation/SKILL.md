@@ -165,33 +165,25 @@ people up constantly:
    pumped so the animation settles before capture. Default `0` keeps capture synchronous and
    leaves existing baselines untouched, so it's opt-in; re-record after enabling it.
 
-4. **Video / map / Metal layers don't rasterize.** `VideoPlayer` / `AVPlayerLayer`,
-   `Map`, `SceneKit`/`Metal` views, and other compositor-backed layers render blank offscreen
-   — `captureSettleDuration` does **not** help (the layer never produces a bitmap). Document a
-   **poster frame** (a static `Image`) for these instead.
+4. **Backdrop / compositor effects can't be captured in-process at all.** Liquid Glass
+   (`.glassEffect()`), blur materials (`.regularMaterial`), `VideoPlayer` / `AVPlayerLayer`,
+   `Map`, `SceneKit`/`Metal` — all are GPU-rendered at runtime and come out transparent or
+   blank in any in-process snapshot. This is an Apple-tools limitation, confirmed by the
+   swift-snapshot-testing maintainers
+   ([discussion #1031](https://github.com/pointfreeco/swift-snapshot-testing/discussions/1031)).
+   `captureSettleDuration` does not help. See the section below.
 
-5. **Liquid Glass renders transparent/blank.** `.glassEffect()` (iOS 26) samples the
-   backdrop, so offscreen it loses its fill (button becomes floating text) — same bucket as
-   materials and video. Capture the real effect with `captureMode: .hostWindow` from a
-   host-app target — see the *Effects that don't rasterize* section below.
+## Capturing backdrop effects (Liquid Glass, materials, video)
 
-## Effects that don't rasterize (Liquid Glass, materials, video)
+There is **no faithful in-process capture** — `CALayer.render(in:)` skips backdrop filters by
+design. The only faithful path is the **real composited framebuffer**, read from a **UI test**
+(`XCUIScreen.screenshot()`), run **on a device** (the Simulator only approximates Liquid Glass).
 
-These are backdrop/compositor effects; `CALayer.render(in:)` (the default capture) skips
-them, so offscreen they come out transparent. Capture them for real with
-`captureMode: .hostWindow`:
-
-```swift
-let config = DocumentationConfiguration(captureMode: .hostWindow)
-```
-
-It uses `drawHierarchy(afterScreenUpdates:)` in the key window — a real render-server pass that
-composites materials/glass, but **over-brightens glass ~14%** (measured) and **requires a
-host-app test target** (it traps in a pure SwiftPM logic-test bundle). For a **pixel-exact**
-capture, read the real framebuffer in a UI test (`XCUIScreen.screenshot()`) — the repo's
-`HostApp/` does this (an app that presents each glass screen by launch argument + a UI-test
-target that writes the framebuffer PNGs). In `.offscreen` (no host app) these effects render
-transparent — there is no faithful offscreen capture of them.
+The repo's `HostApp/` is a working template: a small app that presents each screen by launch
+argument + a UI-test target that captures the framebuffer PNGs; the DocC catalog / Flow Explorer
+is then generated from those PNGs. For everything that isn't a backdrop effect (the vast majority
+of UI), the default offscreen capture is faithful — substitute a solid color / poster frame only
+if you must keep a glass/material/video screen in an offscreen flow.
 
 ## Adding a screen to an existing, already-recorded flow
 

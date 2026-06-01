@@ -381,15 +381,6 @@ private func channelsClose(_ a: (r: UInt8, g: UInt8, b: UInt8, a: UInt8), _ b: (
     #expect(DocumentationConfiguration(captureSettleDuration: 0.75).captureSettleDuration == 0.75)
 }
 
-@Test func captureModeDefaultsToOffscreen() {
-    // Offscreen works headless; hostWindow requires a host app, so it must be opt-in.
-    #expect(DocumentationConfiguration().captureMode == .offscreen)
-}
-
-@Test func captureModeIsStored() {
-    #expect(DocumentationConfiguration(captureMode: .hostWindow).captureMode == .hostWindow)
-}
-
 // MARK: - Fix #1: deterministic snapshot directory derivation
 
 @Test func snapshotDirectoryMatchesSnapshotTestingLayout() {

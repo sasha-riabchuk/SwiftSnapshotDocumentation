@@ -38,30 +38,6 @@ public struct DocumentationConfiguration: Sendable {
         case jpeg = "jpg"
     }
 
-    /// How a screen's pixels are produced during capture.
-    public enum CaptureMode: Sendable, Equatable {
-        /// Offscreen render of the view's layer tree (`.image(on:)` → `CALayer.render`).
-        ///
-        /// Works everywhere, including headless SPM logic-test bundles, and is fully
-        /// device-accurate (size, safe area, traits). **Does not composite backdrop
-        /// effects** — Liquid Glass (`.glassEffect()`) and blur materials render
-        /// transparent, because `CALayer.render(in:)` skips backdrop filters by design.
-        /// Substitute those in your own view — pick a non-glass style, or read a
-        /// documentation flag you define yourself and set in the `view:` builder. This is
-        /// the default.
-        case offscreen
-
-        /// Real-compositor capture via `drawHierarchy(afterScreenUpdates:)` in the key window.
-        ///
-        /// Goes through the render server, so it **can** composite backdrop effects
-        /// (materials, and potentially Liquid Glass). **Requires the snapshot test to run
-        /// in a host application** — it traps in a pure SPM logic-test bundle (there is no
-        /// key window to composite). Use it only from an Xcode app test target with a test
-        /// host. Note: safe-area insets and scale come from the host app's real window, so
-        /// output is less device-controllable than ``offscreen``.
-        case hostWindow
-    }
-
     /// The image format to use for snapshots.
     ///
     /// - Default: `.png`
@@ -73,7 +49,6 @@ public struct DocumentationConfiguration: Sendable {
     /// notches, and physical device appearance.
     ///
     /// - Default: `true`
-    /// - Note: Currently controlled by PointFree's snapshot-testing configuration
     public let deviceFrames: Bool
 
     /// Pixel-level tolerance for snapshot comparisons.
@@ -132,14 +107,6 @@ public struct DocumentationConfiguration: Sendable {
     ///   baselines for animated screens, so re-record after turning it on.
     public let captureSettleDuration: TimeInterval
 
-    /// How pixels are produced during capture.
-    ///
-    /// - Default: ``CaptureMode/offscreen`` — device-accurate and works headless, but
-    ///   doesn't composite backdrop effects (substitute them in your own view). Switch to
-    ///   ``CaptureMode/hostWindow`` from a host-app test target to attempt real-compositor
-    ///   capture of materials / Liquid Glass.
-    public let captureMode: CaptureMode
-
     /// Creates a documentation configuration with default values.
     ///
     /// - Parameters:
@@ -152,8 +119,6 @@ public struct DocumentationConfiguration: Sendable {
     ///   - organizeByDevice: Organize images by device (default: `false`)
     ///   - captureSettleDuration: Seconds to let entrance animations settle before
     ///     capture (default: `0` — synchronous capture, existing behavior)
-    ///   - captureMode: How pixels are produced (default: `.offscreen`; `.hostWindow`
-    ///     attempts real-compositor capture and requires a host-app test target)
     public init(
         imageFormat: ImageFormat = .png,
         deviceFrames: Bool = true,
@@ -162,8 +127,7 @@ public struct DocumentationConfiguration: Sendable {
         createIndexPage: Bool = true,
         includeFlowDiagram: Bool = false,
         organizeByDevice: Bool = false,
-        captureSettleDuration: TimeInterval = 0,
-        captureMode: CaptureMode = .offscreen
+        captureSettleDuration: TimeInterval = 0
     ) {
         self.imageFormat = imageFormat
         self.deviceFrames = deviceFrames
@@ -173,7 +137,6 @@ public struct DocumentationConfiguration: Sendable {
         self.includeFlowDiagram = includeFlowDiagram
         self.organizeByDevice = organizeByDevice
         self.captureSettleDuration = captureSettleDuration
-        self.captureMode = captureMode
     }
 }
 

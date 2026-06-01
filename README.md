@@ -260,8 +260,7 @@ let config = DocumentationConfiguration(
     createIndexPage: true,          // Curate a Topics → Screens listing on the root page
     includeFlowDiagram: false,      // Add a Mermaid flow diagram of the screen sequence
     organizeByDevice: false,        // Group catalog images into per-device subfolders
-    captureSettleDuration: 0,       // Seconds to let entrance animations settle (see below)
-    captureMode: .offscreen         // .offscreen (default) or .hostWindow (see below)
+    captureSettleDuration: 0        // Seconds to let entrance animations settle (see below)
 )
 
 // Pass the configuration at flow creation so the comparison tolerances take
@@ -313,32 +312,24 @@ baselines after turning it on.
 > `VideoPlayer` / `AVPlayerLayer`, `Map`, or Metal/SceneKit views — they don't
 > rasterize in offscreen snapshots at all. Document a static **poster frame** for those.
 
-### Effects that don't rasterize (Liquid Glass, materials, video)
+### Liquid Glass, materials, and video can't be captured in-process
 
-Some effects never survive an offscreen snapshot pass: Liquid Glass (`.glassEffect()`)
-and blur materials (`.regularMaterial`, …) render with a transparent backdrop, and
-`VideoPlayer` / `AVPlayerLayer` / Metal views come out blank. They are produced by the
-render server sampling the framebuffer behind the layer, and `CALayer.render(in:)` (the
-default capture) **skips backdrop filters by design**. There's a fidelity ladder here:
+Backdrop effects — Liquid Glass (`.glassEffect()`), blur materials (`.regularMaterial`, …) —
+and `VideoPlayer` / `Map` / Metal views are produced by the GPU **render server** at runtime.
+**No in-process snapshot reproduces them**, and that's a platform limitation, not a library one:
+`CALayer.render(in:)` (how snapshot testing renders) skips backdrop filters by design, so glass
+comes out transparent. The swift-snapshot-testing maintainers
+[say the same](https://github.com/pointfreeco/swift-snapshot-testing/discussions/1031): *"sadly
+just how Apple's tools work."*
 
-- **`.offscreen` (default)** — `CALayer.render`; backdrop effects render transparent. No glass.
-- **`.hostWindow`** — `drawHierarchy(afterScreenUpdates:)` in the key window; *does* composite
-  glass/materials, but **over-brightens** the glass material (~14% brighter than the screen,
-  measured) and **requires a host-app test target** (it traps in a pure SwiftPM logic-test
-  bundle). Close, but not pixel-faithful.
+The only faithful capture is the **actual composited framebuffer**, read from a **UI test** with
+`XCUIScreen.screenshot()` — and, since the Simulator only approximates Liquid Glass, run it **on
+a real device** for the true effect. The repo's [`HostApp/`](HostApp/) is a working template: a
+small app that presents each glass screen by launch argument, plus a UI-test target that captures
+the framebuffer. The DocC catalog / Flow Explorer can then be generated from those PNGs.
 
-  ```swift
-  let config = DocumentationConfiguration(captureMode: .hostWindow)
-  ```
-
-- **Framebuffer (UI test)** — the only **pixel-exact** capture: a UI test reads the real
-  composited screen with `XCUIScreen.screenshot()`. See [`HostApp/`](HostApp/), which presents
-  each glass screen by launch argument and captures the framebuffer (card luminance matches the
-  simulator exactly, vs the over-bright `drawHierarchy`). This is out-of-process — the app
-  presents the screens; it doesn't use the library's `view:{}` capture model.
-
-For true device-accurate Liquid Glass, run the framebuffer capture **on a real device** — the
-simulator renders its own approximation of the effect.
+For everything that *isn't* a backdrop effect (the vast majority of UI), the default offscreen
+capture is faithful — this caveat is specific to glass/materials/video.
 
 ## Using with AI coding agents
 

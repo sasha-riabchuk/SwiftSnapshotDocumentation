@@ -2,13 +2,11 @@
 //  ModernSwiftUIExampleViews.swift
 //  SwiftSnapshotDocumentationExamples
 //
-//  A showcase of recent SwiftUI features (MeshGradient, Liquid Glass, Gauge, Swift
-//  Charts, ContentUnavailableView). Availability-guarded so the target still builds on
-//  the iOS 17 / macOS 14 floor, with graceful fallbacks on older OSes.
-//
-//  Capture note: Liquid Glass (`.glassEffect()`) is a backdrop effect — it renders
-//  transparent in an offscreen snapshot, and composites correctly only when captured from
-//  a host app (`captureMode: .hostWindow` — see the repo's `HostApp/` target).
+//  A showcase of recent SwiftUI features (MeshGradient, Gauge, Swift Charts,
+//  ContentUnavailableView) that rasterize faithfully in an offscreen snapshot.
+//  Availability-guarded so the target still builds on the iOS 17 / macOS 14 floor.
+//  (Liquid Glass is intentionally absent — backdrop effects can't be captured in-process;
+//  see the repo's `HostApp/` for the device/UI-test framebuffer approach.)
 //
 
 import SwiftUI
@@ -58,42 +56,6 @@ public struct MeshGradientHeroView: View {
                     .foregroundStyle(.white.opacity(0.95))
             }
             .padding()
-        }
-    }
-}
-
-// MARK: - Liquid Glass (real API)
-
-/// Real Liquid Glass via `.glassEffect()` (iOS 26 / macOS 26), with an `.ultraThinMaterial`
-/// fallback. NOTE: glass samples the backdrop, so an offscreen snapshot shows it transparent
-/// (the labels float without their capsule). This screen documents that limitation.
-public struct LiquidGlassRealView: View {
-    public init() {}
-    public var body: some View {
-        ZStack {
-            MeshBackdrop().ignoresSafeArea()
-            VStack(spacing: 20) {
-                Text("Liquid Glass")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(.white)
-                    .shadow(radius: 6)
-                glass(Text("Continue").fontWeight(.semibold))
-                glass(Text("Maybe Later"))
-            }
-            .padding(40)
-        }
-    }
-
-    @ViewBuilder
-    private func glass(_ label: some View) -> some View {
-        let padded = label
-            .foregroundStyle(.white)
-            .padding(.horizontal, 40)
-            .padding(.vertical, 18)
-        if #available(iOS 26.0, macOS 26.0, *) {
-            padded.glassEffect(.regular, in: .capsule)
-        } else {
-            padded.background(.ultraThinMaterial, in: Capsule())
         }
     }
 }

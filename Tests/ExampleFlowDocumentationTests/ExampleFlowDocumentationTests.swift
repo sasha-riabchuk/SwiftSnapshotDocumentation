@@ -354,10 +354,10 @@ final class ExampleFlowDocumentationTests: XCTestCase {
         print("🗂  Regression: \(exported.screenCount) screens at \(exported.featurePath)")
     }
 
-    /// A showcase of recent SwiftUI features — MeshGradient, Liquid Glass, Gauge / Swift
-    /// Charts, ContentUnavailableView. The Liquid Glass screen shows the real `.glassEffect()`,
-    /// which renders transparent in an offscreen snapshot; capture it for real with
-    /// `captureMode: .hostWindow` from a host app (see the repo's `HostApp/` target).
+    /// A showcase of recent SwiftUI features that rasterize faithfully offscreen —
+    /// MeshGradient, Gauge / Swift Charts, ContentUnavailableView. (Liquid Glass is captured
+    /// separately on a device via the UI-test framebuffer in the repo's `HostApp/`, since
+    /// backdrop effects don't composite in an in-process snapshot.)
     func testGenerateModernSwiftUIFlow() async throws {
         let isRecording = ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] != nil
 
@@ -365,13 +365,9 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             name: "Modern SwiftUI",
             summary: "Recent SwiftUI features, captured for documentation",
             overview: """
-            A reference gallery of recent SwiftUI APIs: `MeshGradient` (iOS 18), Liquid
-            Glass (`.glassEffect()`, iOS 26), `Gauge` + Swift `Charts` (iOS 16), and
-            `ContentUnavailableView` (iOS 17).
-
-            Liquid Glass is a backdrop effect — it samples the content behind it, so an
-            offscreen snapshot captures it transparent. Capture the real effect from a host
-            app with `captureMode: .hostWindow` (see the repo's `HostApp/` target).
+            A reference gallery of recent SwiftUI APIs that rasterize faithfully in an
+            offscreen snapshot: `MeshGradient` (iOS 18), `Gauge` + Swift `Charts` (iOS 16),
+            and `ContentUnavailableView` (iOS 17).
             """,
             record: isRecording ? .record : .verify
         )
@@ -384,14 +380,6 @@ final class ExampleFlowDocumentationTests: XCTestCase {
             description: "A 3×3 MeshGradient hero (iOS 18)",
             view: { MeshGradientHeroView() }, devices: devices, themes: themes,
             callouts: [.init(type: .tip, content: "MeshGradient rasterizes fine — no special handling needed")],
-            transitions: [.to("Liquid Glass — Real")]
-        )
-        await flow.addScreen(
-            title: "Liquid Glass — Real",
-            description: "Real `.glassEffect()` (iOS 26) — note the transparent backdrop offscreen",
-            discussion: "Liquid Glass samples the framebuffer behind it, which an offscreen snapshot can't provide, so the capsule fill is missing (the label floats). Capture the real effect with `captureMode: .hostWindow` from a host-app test target — see the repo's `HostApp/` target, which captures the real frosted glass.",
-            view: { LiquidGlassRealView() }, devices: devices, themes: themes,
-            callouts: [.init(type: .warning, content: "Glass renders transparent offscreen — capture it for real via .hostWindow (HostApp/)")],
             transitions: [.to("Gauges & Charts")]
         )
         await flow.addScreen(

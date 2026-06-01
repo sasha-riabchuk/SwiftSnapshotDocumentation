@@ -253,53 +253,23 @@ public final class DocumentedFlow {
                 settleWindow = window
             }
 
-            switch self.configuration.captureMode {
-            case .offscreen:
-                // Default: offscreen layer render. Device-accurate, works headless, but
-                // backdrop effects (Liquid Glass, materials) don't composite — substitute
-                // them in your own view (a real style, or your own documentation flag set
-                // in the `view:` builder), or capture via `.hostWindow`.
-                assertSnapshot(
-                    of: host,
-                    as: .image(
-                        on: device.viewImageConfig,
-                        precision: self.configuration.snapshotPrecision,
-                        perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
-                        traits: .init(userInterfaceStyle: dark ? .dark : .light)
-                    ),
-                    named: snapshotName,
-                    file: file,
-                    testName: testName,
-                    line: line
-                )
-            case .hostWindow:
-                // Real-compositor capture: `drawHierarchy(afterScreenUpdates:)` in the key
-                // window, which CAN composite materials / Liquid Glass — but only when the
-                // test runs in a host application (it traps otherwise). Free the settle
-                // window first so the strategy owns the key window; @State persists.
-                settleWindow?.isHidden = true
-                settleWindow?.rootViewController = nil
-                settleWindow = nil
-                host.view.frame = CGRect(origin: .zero, size: device.viewImageConfig.size ?? UIScreen.main.bounds.size)
-                let traits = UITraitCollection(traitsFrom: [
-                    device.viewImageConfig.traits,
-                    UITraitCollection(userInterfaceStyle: dark ? .dark : .light)
-                ])
-                assertSnapshot(
-                    of: host.view,
-                    as: .image(
-                        drawHierarchyInKeyWindow: true,
-                        precision: self.configuration.snapshotPrecision,
-                        perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
-                        size: device.viewImageConfig.size,
-                        traits: traits
-                    ),
-                    named: snapshotName,
-                    file: file,
-                    testName: testName,
-                    line: line
-                )
-            }
+            // Offscreen layer render via `.image(on:)`. Device-accurate and works headless.
+            // Backdrop effects (Liquid Glass, materials) don't composite this way — that's a
+            // platform limitation of every in-process snapshot path; capture those on a real
+            // device with a UI-test framebuffer (see the repo's `HostApp/`).
+            assertSnapshot(
+                of: host,
+                as: .image(
+                    on: device.viewImageConfig,
+                    precision: self.configuration.snapshotPrecision,
+                    perceptualPrecision: self.configuration.snapshotPerceptualPrecision,
+                    traits: .init(userInterfaceStyle: dark ? .dark : .light)
+                ),
+                named: snapshotName,
+                file: file,
+                testName: testName,
+                line: line
+            )
 
             // Tear down the settle window after capture.
             settleWindow?.isHidden = true

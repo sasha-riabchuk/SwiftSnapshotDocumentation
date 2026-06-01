@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0FC6FF580D4C1D63C4FCD796"
+               BlueprintIdentifier = "A67A9065AC7EB62C396273F3"
                BuildableName = "GlassProofApp.app"
                BlueprintName = "GlassProofApp"
                ReferencedContainer = "container:GlassProof.xcodeproj">
@@ -30,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0FC6FF580D4C1D63C4FCD796"
+            BlueprintIdentifier = "A67A9065AC7EB62C396273F3"
             BuildableName = "GlassProofApp.app"
             BlueprintName = "GlassProofApp"
             ReferencedContainer = "container:GlassProof.xcodeproj">
@@ -41,9 +41,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CEC1E2ECA8F110965715B073"
-               BuildableName = "GlassProofTests.xctest"
-               BlueprintName = "GlassProofTests"
+               BlueprintIdentifier = "4209ACC53339DE401CEB6F2A"
+               BuildableName = "GlassProofUITests.xctest"
+               BlueprintName = "GlassProofUITests"
                ReferencedContainer = "container:GlassProof.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -63,7 +63,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0FC6FF580D4C1D63C4FCD796"
+            BlueprintIdentifier = "A67A9065AC7EB62C396273F3"
             BuildableName = "GlassProofApp.app"
             BlueprintName = "GlassProofApp"
             ReferencedContainer = "container:GlassProof.xcodeproj">
@@ -80,7 +80,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0FC6FF580D4C1D63C4FCD796"
+            BlueprintIdentifier = "A67A9065AC7EB62C396273F3"
             BuildableName = "GlassProofApp.app"
             BlueprintName = "GlassProofApp"
             ReferencedContainer = "container:GlassProof.xcodeproj">

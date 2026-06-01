@@ -1,69 +1,43 @@
-# HostApp — capturing real backdrop effects (Liquid Glass / materials)
+# HostApp — pixel-exact Liquid Glass capture (UI-test framebuffer)
 
-Backdrop effects — Liquid Glass (`.glassEffect()`), blur materials — are produced by the
-**render server (compositor)** sampling the framebuffer behind the layer. swift-snapshot-testing's
-default capture uses `CALayer.render(in:)`, which **skips backdrop filters by design**, so an
-offscreen snapshot shows them transparent. The only path that composites them
-(`drawHierarchy(afterScreenUpdates:)` in the key window) **requires a host application** — it
-traps in a pure SwiftPM logic-test bundle (there is no key window).
+Liquid Glass (`.glassEffect()`) and blur materials are produced by the GPU **render server**.
+No in-process snapshot reproduces them faithfully:
 
-This directory is that host application: a minimal iOS app + a **host-based** unit-test target,
-so `DocumentedFlow`'s `captureMode: .hostWindow` runs where a real key window exists and captures
-the **real** glass.
+- `CALayer.render(in:)` (the library's default `.offscreen`) **skips backdrop filters** → glass
+  renders transparent.
+- `drawHierarchy(afterScreenUpdates:)` (the library's `.hostWindow`) *does* composite glass, but
+  it **over-brightens** the material (~14% brighter than the screen) — measurably unfaithful.
+
+The only faithful capture is the **actual composited framebuffer**, read with a UI test:
+`XCUIScreen.screenshot()`. That's pixel-exact to what the simulator renders (and device-accurate
+when run on a device). This directory does exactly that.
+
+- `Sources/App/GlassProofApp.swift` — presents a glass screen chosen by the
+  `-glassScreen <id>` / `-appearance light|dark` launch arguments (status bar hidden).
+- `Sources/App/GlassScreens.swift` — the glass screens (`.glassEffect`, `.buttonStyle(.glass)`,
+  glass alert / bottom sheet / tab bar) + the id→view router and the `GlassCatalog` order.
+- `Sources/UITests/GlassUITests.swift` — launches the app once per screen × theme, captures
+  `XCUIScreen.main.screenshot()`, and writes `Sources/UITests/__Framebuffers__/NN-<id>-iPhone15Pro-<theme>.png`.
 
 ## Run it
 
 ```sh
 cd HostApp
-ruby generate.rb            # (re)generate GlassProof.xcodeproj — only needed if you change targets
+ruby generate.rb            # (re)generate GlassProof.xcodeproj — only if you change targets/files
 xcodebuild test -project GlassProof.xcodeproj -scheme GlassProofApp \
-  -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-- **Verify (default):** compares against the committed baselines in
-  `Sources/Tests/__Snapshots__/` — real frosted-glass capsules, light and dark.
-- **Record:** set `RECORD_SNAPSHOTS` in the scheme/test-plan environment, then run.
+The committed framebuffer PNGs under `Sources/UITests/__Framebuffers__/` are the faithful
+real-glass reference images. Re-running the UI test regenerates them.
 
 `generate.rb` uses the Ruby `xcodeproj` gem (`gem install xcodeproj`). The generated
-`GlassProof.xcodeproj` is committed and portable (relative paths, relative `..` package
-reference), so you can open and run it directly without regenerating.
+`GlassProof.xcodeproj` is committed and portable (relative paths).
 
-## How it works
+## Notes
 
-- `Sources/App/GlassProofApp.swift` — a trivial SwiftUI app; its only job is to provide a real
-  `UIApplication` + foreground `UIWindowScene` + key window.
-- `Sources/Tests/GlassProofTests.swift` — runs `DocumentedFlow(configuration: .init(captureMode:
-  .hostWindow))` on a Liquid Glass screen. Because the test is **hosted** by the app, the SDK's
-  `drawHierarchy(afterScreenUpdates:)` path composites the glass instead of trapping.
-
-## Generating a Flow Explorer that shows the real glass
-
-`exportFlowExplorer` cannot be awaited from *inside* a host-app async XCTest (it throws an
-XCTest `InvalidTransition`). So this target only **captures** the real-glass baselines
-(`Sources/Tests/__Snapshots__/GlassProofTests/`). To build an interactive Flow Explorer whose
-nodes show that real glass, generate it from a **stable SPM test** and point the exporter at
-these baselines via `snapshotSourcePath`:
-
-```swift
-// In an SPM (logic-bundle) test — exportFlowExplorer is reliable there:
-let flow = DocumentedFlow(name: "Real Glass", summary: "…")
-await flow.addScreen(title: "Glass Buttons", view: { GlassButtonsScreen() },
-                     devices: [.iPhone15Pro], themes: [.light, .dark])   // captured offscreen, just to register the screen
-// …add the other screens…
-try await flow.exportFlowExplorer(
-    at: "FlowExplorer",
-    snapshotSourcePath: "<repo>/HostApp/Sources/Tests/__Snapshots__/GlassProofTests"  // real-glass images
-)
-```
-
-The offscreen captures only register the flow's screens; the exported node images are read
-from the real-glass baselines, so the explorer shows the real frosted glass. The generated
-bundle is written relative to the test process's working directory.
-
-## In your own app
-
-You don't need this directory — your app already has a host. In your app's **unit-test target
-with a test host**, set `DocumentationConfiguration(captureMode: .hostWindow)` and the same real
-capture applies. Without a host app, `.offscreen` (the default) renders glass/materials
-transparent — there is no faithful offscreen capture of backdrop effects. See the top-level
-README's "effects that don't rasterize" section.
+- The framebuffer is the **actual device size** of the simulator you run on (e.g. iPhone 17 Pro,
+  1206×2622); the `iPhone15Pro` in the filename is just a stable label for the Flow Explorer.
+- Status bar is hidden so the capture is pure screen content.
+- Run on a **real device** for true device-accurate Liquid Glass — the simulator's glass is its
+  own approximation of the device effect.

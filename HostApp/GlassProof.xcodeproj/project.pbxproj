@@ -7,113 +7,132 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		005F30A064F19893FF19A52C /* SwiftSnapshotDocumentation in Frameworks */ = {isa = PBXBuildFile; productRef = 9AE451814F50494E2C96C369 /* SwiftSnapshotDocumentation */; };
-		0161DAE57A0DC214AEF94CDC /* GlassProofApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F2BA7584250CD470239CF5 /* GlassProofApp.swift */; };
-		838924B6DF482006337CC529 /* GlassProofTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB939E6B83D3B15CA846C4B /* GlassProofTests.swift */; };
-		84C917F4BF2D0C816C590FA9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 59589CA9ECAB1B10081449D9 /* Foundation.framework */; };
-		8C759911FEDCA5618A82067B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 59589CA9ECAB1B10081449D9 /* Foundation.framework */; };
+		24EB1D09110806D212423DE9 /* GlassScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA57398F4D772B95A521FCE /* GlassScreens.swift */; };
+		70D7B24BC9A5E1AFD2152051 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6F917686C898A9887C7571 /* Foundation.framework */; };
+		B160271DE735CFD451D90479 /* GlassProofApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B2CF8942EB56E1F17FB631 /* GlassProofApp.swift */; };
+		EC70B4FF6EBA714ACFFA5F1E /* GlassUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEFB5191010684ED9FE62C89 /* GlassUITests.swift */; };
+		F3ECF328B20EFB2E01A30E2A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B6F917686C898A9887C7571 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		A55667DEC82C5C7A698F0E49 /* PBXContainerItemProxy */ = {
+		46634A35A29B507C043AD399 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = FDD69BE15BB0357E8F51B873 /* Project object */;
+			containerPortal = 3687001B6DB5AB8E9F134C2E /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 0FC6FF580D4C1D63C4FCD796;
+			remoteGlobalIDString = A67A9065AC7EB62C396273F3;
 			remoteInfo = GlassProofApp;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0FB939E6B83D3B15CA846C4B /* GlassProofTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GlassProofTests.swift; path = ./Sources/Tests/GlassProofTests.swift; sourceTree = "<group>"; };
-		24F2BA7584250CD470239CF5 /* GlassProofApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GlassProofApp.swift; path = ./Sources/App/GlassProofApp.swift; sourceTree = "<group>"; };
-		2C50F51B67F88FE04865D6F5 /* GlassProofTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassProofTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		59589CA9ECAB1B10081449D9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		A1F421394EDB0994DA609680 /* GlassProofApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassProofApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B6F917686C898A9887C7571 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		AAA57398F4D772B95A521FCE /* GlassScreens.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GlassScreens.swift; path = ./Sources/App/GlassScreens.swift; sourceTree = "<group>"; };
+		AEFB5191010684ED9FE62C89 /* GlassUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GlassUITests.swift; path = ./Sources/UITests/GlassUITests.swift; sourceTree = "<group>"; };
+		B3D1364619B8A5D655F7D942 /* GlassProofApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassProofApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BEB67BECC080DFE2B4422A28 /* GlassProofUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlassProofUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7B2CF8942EB56E1F17FB631 /* GlassProofApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GlassProofApp.swift; path = ./Sources/App/GlassProofApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		11AD9D6319495270A12A4C06 /* Frameworks */ = {
+		25B07640AE30FD0120B71579 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				84C917F4BF2D0C816C590FA9 /* Foundation.framework in Frameworks */,
+				70D7B24BC9A5E1AFD2152051 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		8F63765B099AC373D2DA74D5 /* Frameworks */ = {
+		FB7892A78EB30180E263EE99 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8C759911FEDCA5618A82067B /* Foundation.framework in Frameworks */,
-				005F30A064F19893FF19A52C /* SwiftSnapshotDocumentation in Frameworks */,
+				F3ECF328B20EFB2E01A30E2A /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		28B9E495D40FC2BEFF0E7DA2 /* App */ = {
+		04C52F79EA623BC2EEC596D5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				24F2BA7584250CD470239CF5 /* GlassProofApp.swift */,
-			);
-			name = App;
-			sourceTree = "<group>";
-		};
-		4963C632822C52FE881D9EE6 = {
-			isa = PBXGroup;
-			children = (
-				9DF4E6D13842A522050CCBDA /* Products */,
-				F9FE12F75CCB1A4D41B06D5F /* Frameworks */,
-				28B9E495D40FC2BEFF0E7DA2 /* App */,
-				F694CC29F46CFFD549A647DE /* Tests */,
-			);
-			sourceTree = "<group>";
-		};
-		6B3C4B81C5E9E055A92573C1 /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				59589CA9ECAB1B10081449D9 /* Foundation.framework */,
-			);
-			name = iOS;
-			sourceTree = "<group>";
-		};
-		9DF4E6D13842A522050CCBDA /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				A1F421394EDB0994DA609680 /* GlassProofApp.app */,
-				2C50F51B67F88FE04865D6F5 /* GlassProofTests.xctest */,
+				B3D1364619B8A5D655F7D942 /* GlassProofApp.app */,
+				BEB67BECC080DFE2B4422A28 /* GlassProofUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		F694CC29F46CFFD549A647DE /* Tests */ = {
+		0F29B8670F4C34BAD5BDCED0 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
-				0FB939E6B83D3B15CA846C4B /* GlassProofTests.swift */,
+				AEFB5191010684ED9FE62C89 /* GlassUITests.swift */,
 			);
-			name = Tests;
+			name = UITests;
 			sourceTree = "<group>";
 		};
-		F9FE12F75CCB1A4D41B06D5F /* Frameworks */ = {
+		55704B430B76E138A3D8E8B5 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
-				6B3C4B81C5E9E055A92573C1 /* iOS */,
+				0B6F917686C898A9887C7571 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		B0C8B8131D3B37C8F2BF1DB4 = {
+			isa = PBXGroup;
+			children = (
+				04C52F79EA623BC2EEC596D5 /* Products */,
+				BA58E4D868A373583AB3C15F /* Frameworks */,
+				D12CED5309912E5A6DC71936 /* App */,
+				0F29B8670F4C34BAD5BDCED0 /* UITests */,
+			);
+			sourceTree = "<group>";
+		};
+		BA58E4D868A373583AB3C15F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				55704B430B76E138A3D8E8B5 /* iOS */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D12CED5309912E5A6DC71936 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E7B2CF8942EB56E1F17FB631 /* GlassProofApp.swift */,
+				AAA57398F4D772B95A521FCE /* GlassScreens.swift */,
+			);
+			name = App;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0FC6FF580D4C1D63C4FCD796 /* GlassProofApp */ = {
+		4209ACC53339DE401CEB6F2A /* GlassProofUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2A201E21CE18EC3BE452EA40 /* Build configuration list for PBXNativeTarget "GlassProofApp" */;
+			buildConfigurationList = 560073ECEEF912B4A38BED02 /* Build configuration list for PBXNativeTarget "GlassProofUITests" */;
 			buildPhases = (
-				7804247543C54DCA218B4DA9 /* Sources */,
-				11AD9D6319495270A12A4C06 /* Frameworks */,
-				D895E0E7ECE73FACF9B892D7 /* Resources */,
+				9982F318F6EAADBEEE91CCB1 /* Sources */,
+				FB7892A78EB30180E263EE99 /* Frameworks */,
+				42C92EAEB62D995B629A151A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				741E5C4BDD2D2BA9544C3BE2 /* PBXTargetDependency */,
+			);
+			name = GlassProofUITests;
+			productName = GlassProofUITests;
+			productReference = BEB67BECC080DFE2B4422A28 /* GlassProofUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		A67A9065AC7EB62C396273F3 /* GlassProofApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C64DDB2FC0558A5E509AE70C /* Build configuration list for PBXNativeTarget "GlassProofApp" */;
+			buildPhases = (
+				E1F4155A76D56AFA55CCE5EA /* Sources */,
+				25B07640AE30FD0120B71579 /* Frameworks */,
+				F782A0DE6208E764F32480F4 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -121,40 +140,19 @@
 			);
 			name = GlassProofApp;
 			productName = GlassProofApp;
-			productReference = A1F421394EDB0994DA609680 /* GlassProofApp.app */;
+			productReference = B3D1364619B8A5D655F7D942 /* GlassProofApp.app */;
 			productType = "com.apple.product-type.application";
-		};
-		CEC1E2ECA8F110965715B073 /* GlassProofTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C10F1799822C20E55D5A39D0 /* Build configuration list for PBXNativeTarget "GlassProofTests" */;
-			buildPhases = (
-				0657DB1F7C28EB789302E55A /* Sources */,
-				8F63765B099AC373D2DA74D5 /* Frameworks */,
-				57C3F2A3C31BB66D8521CEC7 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				5FD78340517BD77E01B9DCE2 /* PBXTargetDependency */,
-			);
-			name = GlassProofTests;
-			packageProductDependencies = (
-				9AE451814F50494E2C96C369 /* SwiftSnapshotDocumentation */,
-			);
-			productName = GlassProofTests;
-			productReference = 2C50F51B67F88FE04865D6F5 /* GlassProofTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		FDD69BE15BB0357E8F51B873 /* Project object */ = {
+		3687001B6DB5AB8E9F134C2E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 06D1F9830FF34B71146F1021 /* Build configuration list for PBXProject "GlassProof" */;
+			buildConfigurationList = F7AC1C0EEFD8C32D8758D6E3 /* Build configuration list for PBXProject "GlassProof" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -162,31 +160,28 @@
 				en,
 				Base,
 			);
-			mainGroup = 4963C632822C52FE881D9EE6;
+			mainGroup = B0C8B8131D3B37C8F2BF1DB4;
 			minimizedProjectReferenceProxies = 0;
-			packageReferences = (
-				DD38EE370CEB101E05FC968D /* XCLocalSwiftPackageReference ".." */,
-			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 9DF4E6D13842A522050CCBDA /* Products */;
+			productRefGroup = 04C52F79EA623BC2EEC596D5 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0FC6FF580D4C1D63C4FCD796 /* GlassProofApp */,
-				CEC1E2ECA8F110965715B073 /* GlassProofTests */,
+				A67A9065AC7EB62C396273F3 /* GlassProofApp */,
+				4209ACC53339DE401CEB6F2A /* GlassProofUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		57C3F2A3C31BB66D8521CEC7 /* Resources */ = {
+		42C92EAEB62D995B629A151A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D895E0E7ECE73FACF9B892D7 /* Resources */ = {
+		F782A0DE6208E764F32480F4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -196,35 +191,106 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0657DB1F7C28EB789302E55A /* Sources */ = {
+		9982F318F6EAADBEEE91CCB1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				838924B6DF482006337CC529 /* GlassProofTests.swift in Sources */,
+				EC70B4FF6EBA714ACFFA5F1E /* GlassUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7804247543C54DCA218B4DA9 /* Sources */ = {
+		E1F4155A76D56AFA55CCE5EA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0161DAE57A0DC214AEF94CDC /* GlassProofApp.swift in Sources */,
+				B160271DE735CFD451D90479 /* GlassProofApp.swift in Sources */,
+				24EB1D09110806D212423DE9 /* GlassScreens.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		5FD78340517BD77E01B9DCE2 /* PBXTargetDependency */ = {
+		741E5C4BDD2D2BA9544C3BE2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GlassProofApp;
-			target = 0FC6FF580D4C1D63C4FCD796 /* GlassProofApp */;
-			targetProxy = A55667DEC82C5C7A698F0E49 /* PBXContainerItemProxy */;
+			target = A67A9065AC7EB62C396273F3 /* GlassProofApp */;
+			targetProxy = 46634A35A29B507C043AD399 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		7B7C22E940863D411BDC5FD3 /* Debug */ = {
+		12EC6043DA57236FB399E2E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassProofApp;
+			};
+			name = Debug;
+		};
+		35BA7B5395B707B870AFD52D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7BC29693AB1121D77FD3FD4B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -285,28 +351,24 @@
 			};
 			name = Debug;
 		};
-		89BA16AAA4E695F6E145A077 /* Debug */ = {
+		AA71A7B4F6740BDF923A2155 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofUITests;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = GlassProofApp;
+				VALIDATE_PRODUCT = YES;
 			};
-			name = Debug;
+			name = Release;
 		};
-		D190DF75A53C947F5D3D69E7 /* Release */ = {
+		B37694CF88E7C99895EF1ADC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -328,141 +390,58 @@
 			};
 			name = Release;
 		};
-		DF0874F6EB0C1D04A3DA8B36 /* Debug */ = {
+		C8002204C51F6701C4A55F81 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofTests;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofApp;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassProofApp.app/GlassProofApp";
 			};
 			name = Debug;
-		};
-		EBB6F43530804CF9F13A194D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.GlassProofTests;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlassProofApp.app/GlassProofApp";
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		EEC809352CEDD0E7353C77EB /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		06D1F9830FF34B71146F1021 /* Build configuration list for PBXProject "GlassProof" */ = {
+		560073ECEEF912B4A38BED02 /* Build configuration list for PBXNativeTarget "GlassProofUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7B7C22E940863D411BDC5FD3 /* Debug */,
-				EEC809352CEDD0E7353C77EB /* Release */,
+				AA71A7B4F6740BDF923A2155 /* Release */,
+				12EC6043DA57236FB399E2E4 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2A201E21CE18EC3BE452EA40 /* Build configuration list for PBXNativeTarget "GlassProofApp" */ = {
+		C64DDB2FC0558A5E509AE70C /* Build configuration list for PBXNativeTarget "GlassProofApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D190DF75A53C947F5D3D69E7 /* Release */,
-				89BA16AAA4E695F6E145A077 /* Debug */,
+				B37694CF88E7C99895EF1ADC /* Release */,
+				C8002204C51F6701C4A55F81 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C10F1799822C20E55D5A39D0 /* Build configuration list for PBXNativeTarget "GlassProofTests" */ = {
+		F7AC1C0EEFD8C32D8758D6E3 /* Build configuration list for PBXProject "GlassProof" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				EBB6F43530804CF9F13A194D /* Release */,
-				DF0874F6EB0C1D04A3DA8B36 /* Debug */,
+				7BC29693AB1121D77FD3FD4B /* Debug */,
+				35BA7B5395B707B870AFD52D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		DD38EE370CEB101E05FC968D /* XCLocalSwiftPackageReference ".." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ..;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		9AE451814F50494E2C96C369 /* SwiftSnapshotDocumentation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DD38EE370CEB101E05FC968D /* XCLocalSwiftPackageReference ".." */;
-			productName = SwiftSnapshotDocumentation;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = FDD69BE15BB0357E8F51B873 /* Project object */;
+	rootObject = 3687001B6DB5AB8E9F134C2E /* Project object */;
 }

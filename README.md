@@ -319,28 +319,26 @@ Some effects never survive an offscreen snapshot pass: Liquid Glass (`.glassEffe
 and blur materials (`.regularMaterial`, …) render with a transparent backdrop, and
 `VideoPlayer` / `AVPlayerLayer` / Metal views come out blank. They are produced by the
 render server sampling the framebuffer behind the layer, and `CALayer.render(in:)` (the
-default capture) **skips backdrop filters by design**. Capture them for real with
-`captureMode: .hostWindow`:
+default capture) **skips backdrop filters by design**. There's a fidelity ladder here:
 
-```swift
-let config = DocumentationConfiguration(captureMode: .hostWindow)
-```
+- **`.offscreen` (default)** — `CALayer.render`; backdrop effects render transparent. No glass.
+- **`.hostWindow`** — `drawHierarchy(afterScreenUpdates:)` in the key window; *does* composite
+  glass/materials, but **over-brightens** the glass material (~14% brighter than the screen,
+  measured) and **requires a host-app test target** (it traps in a pure SwiftPM logic-test
+  bundle). Close, but not pixel-faithful.
 
-This changes nothing in your views — it switches the capture path to go through the render
-server (`drawHierarchy(afterScreenUpdates:)` in the key window), which **does** composite the
-real effect. iOS 26 **Liquid Glass** is verified end-to-end in [`HostApp/`](HostApp/), a minimal
-host-app target that captures the real frosted glass this way; run it (`cd HostApp && xcodebuild
-test -project GlassProof.xcodeproj -scheme GlassProofApp -destination '…'`) and use it as the
-template for your own app's host-based test target.
+  ```swift
+  let config = DocumentationConfiguration(captureMode: .hostWindow)
+  ```
 
-The trade-offs:
+- **Framebuffer (UI test)** — the only **pixel-exact** capture: a UI test reads the real
+  composited screen with `XCUIScreen.screenshot()`. See [`HostApp/`](HostApp/), which presents
+  each glass screen by launch argument and captures the framebuffer (card luminance matches the
+  simulator exactly, vs the over-bright `drawHierarchy`). This is out-of-process — the app
+  presents the screens; it doesn't use the library's `view:{}` capture model.
 
-- `.hostWindow` **requires the snapshot test to run in a host application** (an Xcode app test
-  target with a test host). It **traps** in a pure SwiftPM logic-test bundle — there is no key
-  window to composite — so the library keeps `.offscreen` as the default. In `.offscreen`,
-  backdrop effects simply render transparent; there is no faithful offscreen capture of them.
-- Safe-area insets and scale come from the host app's actual window, so output is less
-  device-controllable than `.offscreen`.
+For true device-accurate Liquid Glass, run the framebuffer capture **on a real device** — the
+simulator renders its own approximation of the effect.
 
 ## Using with AI coding agents
 

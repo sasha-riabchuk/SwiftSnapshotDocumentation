@@ -119,9 +119,10 @@ xcodebuild test \
   works headless, but **doesn't composite** Liquid Glass / materials); `.hostWindow` captures
   through the render server so backdrop effects **can** composite, but **requires a host-app
   test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from
-  the host window. Use `.hostWindow` from a host-app test target to capture real backdrop
-  effects — proven for iOS 26 Liquid Glass in the repo's `HostApp/`. In `.offscreen` (no host
-  app), backdrop effects render transparent; there is no faithful offscreen capture of them.
+  the host window. `.hostWindow` composites glass/materials but **over-brightens glass ~14%**
+  (measured); for **pixel-exact** glass, capture the framebuffer via a UI test
+  (`XCUIScreen.screenshot()`) — see the repo's `HostApp/`. In `.offscreen` (no host app),
+  backdrop effects render transparent; there is no faithful offscreen capture of them.
 - **`addScreen(... transitions: [ScreenTransition] = [])`** — declare directed edges from
   this screen to others; edges are optional and default to none (linear order is used
   when no screen declares any transitions).
@@ -149,7 +150,7 @@ xcodebuild test \
 | A card/overlay built with `.regularMaterial` / `.ultraThinMaterial` is **transparent** in the snapshot (content bleeds through) | Blur **materials don't render** in offscreen snapshots | Use a solid color instead, e.g. `Color(.tertiarySystemBackground)` (white in light, `#2C2C2E` in dark) — renders correctly and still reads as a native elevated card |
 | A screen that **animates in** (`onAppear { withAnimation { … } }` from `opacity 0` / offset / scale) snapshots **blank/white** | A snapshot is one synchronous frame, captured at the *start* of the entrance animation (content still hidden) | Set `DocumentationConfiguration(captureSettleDuration: 0.6...1.0)` — hosts the view in a live window and pumps the run loop so the animation settles before capture. Default `0` is synchronous (existing baselines unaffected); re-record after enabling |
 | A `VideoPlayer` / `AVPlayerLayer` / `Map` / Metal screen is **blank** | Compositor-backed layers don't rasterize in offscreen snapshots; `captureSettleDuration` won't help | Capture from a **host-app** test target with `captureMode: .hostWindow` (real render-server pass); offscreen can't composite them |
-| A **Liquid Glass** (`.glassEffect()`) button/screen is transparent or blank | Glass samples the backdrop; the default offscreen render skips backdrop filters | Use `captureMode: .hostWindow` from a **host-app** test target — it captures real glass (proven in the repo's `HostApp/`) |
+| A **Liquid Glass** (`.glassEffect()`) button/screen is transparent or blank | Glass samples the backdrop; the default offscreen render skips backdrop filters | `.hostWindow` composites glass but **over-brightens ~14%**; for **pixel-exact** glass capture the framebuffer via a UI test (`XCUIScreen.screenshot()`) — see the repo's `HostApp/` |
 | Adding a new screen makes the whole `.verify` test fail / re-records every snapshot | `.record` overwrites everything; `.verify` fails on the missing one | Use `record: .recordMissing` (records only the new screens, verifies the rest), then commit the new `__Snapshots__` PNGs |
 | New `addScreen` is an orphan node in the explorer | Once *any* screen declares `transitions:`, linear fallback is off flow-wide | Give the new screen (and/or its neighbors) a `transitions:` edge, or leave it intentionally disconnected |
 | Flow Explorer nodes look blurry / squished for iPad | (fixed in 1.2.0) | Update to ≥1.2.0 — nodes size to the real aspect ratio and thumbnails are high-res JPEG |

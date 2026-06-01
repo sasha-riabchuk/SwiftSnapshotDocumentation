@@ -185,12 +185,13 @@ them, so offscreen they come out transparent. Capture them for real with
 let config = DocumentationConfiguration(captureMode: .hostWindow)
 ```
 
-It uses `drawHierarchy(afterScreenUpdates:)` in the key window — a real render-server pass
-that **does** composite materials and iOS 26 Liquid Glass. It **requires a host-app test
-target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from the host
-window. The repo's `HostApp/` target captures the real frosted glass this way and is the
-working template for a host-based test target. In `.offscreen` (no host app) these effects
-render transparent — there is no faithful offscreen capture of them.
+It uses `drawHierarchy(afterScreenUpdates:)` in the key window — a real render-server pass that
+composites materials/glass, but **over-brightens glass ~14%** (measured) and **requires a
+host-app test target** (it traps in a pure SwiftPM logic-test bundle). For a **pixel-exact**
+capture, read the real framebuffer in a UI test (`XCUIScreen.screenshot()`) — the repo's
+`HostApp/` does this (an app that presents each glass screen by launch argument + a UI-test
+target that writes the framebuffer PNGs). In `.offscreen` (no host app) these effects render
+transparent — there is no faithful offscreen capture of them.
 
 ## Adding a screen to an existing, already-recorded flow
 

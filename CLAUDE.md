@@ -73,6 +73,8 @@ The **snapshot filename contract** is the coupling point between the two halves:
 - `SwiftSnapshotDocumentationTests` — unit tests for the library.
 - `ExampleFlowDocumentationTests` — end-to-end test that actually generates a DocC catalog; the canonical usage example.
 
+`HostApp/` is a separate, generated Xcode project (not part of the SPM package) — a minimal iOS app + a **host-based** test target that depends on the local package. It exists to capture **real backdrop effects** (Liquid Glass `.glassEffect()`, materials) via `captureMode: .hostWindow`, which needs a key window and therefore a host application (it traps in the SPM logic-test bundle). `HostApp/generate.rb` (Ruby `xcodeproj` gem) regenerates `GlassProof.xcodeproj`; committed baselines in `HostApp/Sources/Tests/__Snapshots__/` are the real frosted-glass capture. This is the proof that `.hostWindow` composites iOS 26 Liquid Glass, and the template for wiring it into a consumer app's host-based test target.
+
 ## Platform requirements
 
 iOS 17+ / macOS 14+, Swift 5.9+ (tools-version 5.9). Public symbols that depend on UIKit/snapshot config are gated behind `#if os(iOS)` / `@available(iOS 17.0, *)` — preserve this gating when adding device-related API so the package keeps building on macOS.

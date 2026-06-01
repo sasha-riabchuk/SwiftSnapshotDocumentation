@@ -337,8 +337,11 @@ The trade-off is real and worth understanding:
   window to composite — so the library keeps `.offscreen` as the default.
 - Safe-area insets and scale come from the host app's actual window, so output is less
   device-controllable than `.offscreen`.
-- Whether iOS 26 **Liquid Glass** specifically composites this way is environment-dependent;
-  verify in your own host-app target. Materials are well-established to render under this path.
+- iOS 26 **Liquid Glass** *does* composite this way — verified end-to-end in
+  [`HostApp/`](HostApp/), a minimal host-app target that captures the real frosted-glass
+  effect via `.hostWindow`. Run it (`cd HostApp && xcodebuild test -project
+  GlassProof.xcodeproj -scheme GlassProofApp -destination '…'`) to see real glass, and use it
+  as a template for wiring `.hostWindow` into your own app's host-based test target.
 
 **2. Substitute a stand-in — in your own view.** If `.hostWindow` isn't an option (or doesn't
 composite the effect), render a documentation-friendly stand-in *only while capturing* — a

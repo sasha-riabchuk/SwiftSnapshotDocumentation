@@ -222,9 +222,9 @@ doesn't. Pair with `captureSettleDuration` when a substituted screen also animat
 test bundle, but skips backdrop filters → glass/materials transparent). `.hostWindow` captures
 through the render server so those effects **can** composite — but it **requires a host-app
 test target** (it traps in a pure SwiftPM logic-test bundle) and takes safe-area/scale from the
-host window. Materials render under it; whether iOS 26 Liquid Glass does is environment-specific,
-so verify in your hosted target. Use `.offscreen` + the flag by default; `.hostWindow` only where
-a true backdrop effect matters.
+host window. Materials **and** iOS 26 Liquid Glass both render under it — the repo's `HostApp/`
+target captures the real frosted glass this way (a working template for a host-based test target).
+Use `.offscreen` + a stand-in by default; `.hostWindow` only where a true backdrop effect matters.
 
 ## Adding a screen to an existing, already-recorded flow
 

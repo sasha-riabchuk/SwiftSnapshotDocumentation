@@ -36,6 +36,30 @@ reference), so you can open and run it directly without regenerating.
   .hostWindow))` on a Liquid Glass screen. Because the test is **hosted** by the app, the SDK's
   `drawHierarchy(afterScreenUpdates:)` path composites the glass instead of trapping.
 
+## Generating a Flow Explorer that shows the real glass
+
+`exportFlowExplorer` cannot be awaited from *inside* a host-app async XCTest (it throws an
+XCTest `InvalidTransition`). So this target only **captures** the real-glass baselines
+(`Sources/Tests/__Snapshots__/GlassProofTests/`). To build an interactive Flow Explorer whose
+nodes show that real glass, generate it from a **stable SPM test** and point the exporter at
+these baselines via `snapshotSourcePath`:
+
+```swift
+// In an SPM (logic-bundle) test — exportFlowExplorer is reliable there:
+let flow = DocumentedFlow(name: "Real Glass", summary: "…")
+await flow.addScreen(title: "Glass Buttons", view: { GlassButtonsScreen() },
+                     devices: [.iPhone15Pro], themes: [.light, .dark])   // captured offscreen, just to register the screen
+// …add the other screens…
+try await flow.exportFlowExplorer(
+    at: "FlowExplorer",
+    snapshotSourcePath: "<repo>/HostApp/Sources/Tests/__Snapshots__/GlassProofTests"  // real-glass images
+)
+```
+
+The offscreen captures only register the flow's screens; the exported node images are read
+from the real-glass baselines, so the explorer shows the real frosted glass. The generated
+bundle is written relative to the test process's working directory.
+
 ## In your own app
 
 You don't need this directory — your app already has a host. In your app's **unit-test target
